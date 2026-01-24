@@ -6,24 +6,22 @@
 #include <Base/IError.hpp>
 #include <Base/IModule.hpp>
 #include <Base/ResultOrError.hpp>
+#include <Base/Types.hpp>
 #include <Engine/IConsole.hpp>
 #include <Launcher/ILauncher.hpp>
 #include <string>
 
 namespace AS::Engine {
-typedef unsigned long long Tick;
-typedef unsigned long long ModuleID;
-typedef void* LibraryHandle;
+class ILauncher;
 
 struct ModuleInfo {
-  const ModuleID ID;
+  ModuleID ID;
   LibraryHandle Handle;
-  const std::string* Name;
+  std::string* Name;
   IModule* Module;
   bool Activated;
   bool LoadedByEngine;
 
-  ModuleInfo(const ModuleInfo&);
   ModuleInfo& operator=(const ModuleInfo&);
   ModuleInfo& operator=(ModuleInfo&&);
 };
@@ -39,7 +37,7 @@ class ENGINE_EXPORT IEngine : public IModule {
   virtual ResultOrError<ModuleID> LoadModule(const std::string& name) = 0;
   virtual ResultOrError<ModuleID> FindModuleByName(
       const std::string& name) const = 0;
-  virtual const ModuleInfo GetModuleInfo(ModuleID module) const = 0;
+  virtual const ModuleInfo* GetModuleInfo(ModuleID module) const = 0;
   virtual void DeactivateModule(ModuleID module) = 0;
   virtual void ActivateModule(ModuleID module) = 0;
   virtual void UnloadModule(ModuleID module) = 0;

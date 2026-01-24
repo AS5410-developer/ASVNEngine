@@ -16,6 +16,8 @@ class Launcher : public ILauncher {
   virtual void OnLoaded() override;
   virtual void OnRegisterOptions() override;
   virtual void OnUpdate() override;
+  virtual void OnEnabled() override;
+  virtual void OnDisabled() override;
 
   virtual ResultOrError<LibraryHandle> SysLoadLibrary(
       const std::string& path) override;
@@ -29,11 +31,13 @@ class Launcher : public ILauncher {
       const std::string& path) override;
 
   void LaunchFailed(const char* reason, ...);
+  bool IsFailed();
 
   virtual ~Launcher() = default;
 
  private:
   IEngine* EnginePtr;
+  bool Failed = false;
 };
 }  // namespace AS::Engine
 

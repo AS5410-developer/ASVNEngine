@@ -1,5 +1,6 @@
 #include <Engine.hpp>
 #include <iostream>
+#include <thread>
 using namespace AS::Engine;
 
 ModuleInfo& ModuleInfo::operator=(const ModuleInfo& other) {
@@ -23,12 +24,18 @@ ModuleInfo& ModuleInfo::operator=(ModuleInfo&& other) {
   return *info;
 }
 
-Engine::Engine(ILauncher* launcherInstance)
-    : LauncherInstance(launcherInstance) {}
+Engine::Engine() {}
 
 void Engine::OnLoaded() {}
 void Engine::OnRegisterOptions() {}
-void Engine::OnUpdate() {}
+void Engine::OnUpdate() {
+  for (uint64_t i = 0; i < Modules.size(); ++i) {
+    if (Modules[i].Activated)
+      std::thread updateCall([&]() { Modules[i].Module->OnUpdate(); });
+  }
+}
+void Engine::OnEnabled() {}
+void Engine::OnDisabled() {}
 
 void Engine::Quit() { TickInSecond = -1; }
 void Engine::QuitOnError(const IError& error) {
@@ -46,10 +53,14 @@ ModuleID Engine::AddModule(IModule* module) {
   info.Handle = nullptr;
 
   Modules[info.ID] = std::move(info);
+  module->OnLoaded();
 
   return info.ID;
 }
-void Engine::RemoveModule(ModuleID module) { Modules.erase(module); }
+void Engine::RemoveModule(ModuleID module) {
+  DeactivateModule(module);
+  Modules.erase(module);
+}
 
 ResultOrError<ModuleID> Engine::LoadModule(const std::string& name) {
   std::string path = "./bin/" + name;
@@ -57,12 +68,12 @@ ResultOrError<ModuleID> Engine::LoadModule(const std::string& name) {
 
   auto Lib = LauncherInstance->SysLoadLibrary(path);
   if (Lib.Failed()) {
-    return ResultOrError<ModuleID>(Lib.What());
+    return ResultOrError<ModuleID>(0, Lib.What(), true);
   }
 
   auto Proc = LauncherInstance->SysGetModuleFunc(Lib.GetResult());
   if (Proc.Failed()) {
-    return ResultOrError<ModuleID>(Lib.What());
+    return ResultOrError<ModuleID>(0, Lib.What(), true);
   }
 
   info.Module = Proc.GetResult()(this);
@@ -71,17 +82,34 @@ ResultOrError<ModuleID> Engine::LoadModule(const std::string& name) {
   info.Handle = Lib.GetResult();
 
   Modules[info.ID] = std::move(info);
+  info.Module->OnLoaded();
 
   return info.ID;
 }
 ResultOrError<ModuleID> Engine::FindModuleByName(
     const std::string& name) const {}
-const ModuleInfo Engine::GetModuleInfo(ModuleID module) const {
-  return Modules.at(module);
+const ModuleInfo* Engine::GetModuleInfo(ModuleID module) const {
+  return &Modules.at(module);
 }
-void Engine::DeactivateModule(ModuleID module) {}
-void Engine::ActivateModule(ModuleID module) {}
-void Engine::UnloadModule(ModuleID module) {}
+void Engine::DeactivateModule(ModuleID module) {
+  if (!Modules[module].Activated) return;
+  Modules[module].Module->OnDisabled();
+  Modules[module].Activated = false;
+}
+void Engine::ActivateModule(ModuleID module) {
+  if (Modules[module].Activated) return;
+  Modules[module].Module->OnEnabled();
+  Modules[module].Activated = true;
+}
+void Engine::UnloadModule(ModuleID module) {
+  DeactivateModule(module);
+  if (!Modules[module].LoadedByEngine) {
+    Modules.erase(module);
+    return;
+  }
+  LauncherInstance->SysUnloadLibrary(Modules[module].Handle);
+  Modules.erase(module);
+}
 
 void Engine::SetLauncherClass(ILauncher* launcher) {
   LauncherInstance = launcher;

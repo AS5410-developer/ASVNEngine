@@ -6,11 +6,13 @@
 #include <Base/IError.hpp>
 #include <Base/IModule.hpp>
 #include <Base/ResultOrError.hpp>
+#include <Base/Types.hpp>
 #include <Engine/IConsole.hpp>
 #include <Engine/IEngine.hpp>
 #include <string>
 
 namespace AS::Engine {
+class IEngine;
 typedef IModule* (*GetModuleAPIFunc)(IEngine*);
 typedef void (*LaunchFunc)(int argc, char** argv);
 

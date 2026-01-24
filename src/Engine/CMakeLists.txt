@@ -1,4 +1,4 @@
-add_library(Engine SHARED Entry.cpp)
+add_library(Engine SHARED Entry.cpp Engine.cpp Console.cpp)
 
 generate_export_header(Engine
     EXPORT_FILE_NAME "${CMAKE_SOURCE_DIR}/include/engine_export.h"

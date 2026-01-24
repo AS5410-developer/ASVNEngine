@@ -8,7 +8,7 @@ extern "C" void Launch(int argc, char** argv) {
   AS::Engine::Launcher Launcher;
   Launcher.OnRegisterOptions();
   Launcher.OnLoaded();
-  for (;;) {
+  while (!Launcher.IsFailed()) {
     Launcher.OnUpdate();
   }
 }

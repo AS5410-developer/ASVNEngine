@@ -6,18 +6,19 @@
 #include <Base/IError.hpp>
 #include <Engine/IConVar.hpp>
 #include <Engine/IConsole.hpp>
+#include <map>
 
 namespace AS::Engine {
 
 class ENGINE_EXPORT Console : public IConsole {
  public:
-  Console() = default;
+  Console();
 
-  virtual void RegisterConVar(const IConVar& convar) override;
-  virtual void RegisterConCmd(const ConCMD& concmd) override;
+  virtual void RegisterConVar(IConVar& convar) override;
+  virtual void RegisterConCmd(ConCMD& concmd) override;
 
-  virtual const IError ExecuteCommand(const std::string& command) override;
-  virtual const IError Execute(const std::string& filePath) override;
+  virtual const IError* ExecuteCommand(const std::string& command) override;
+  virtual const IError* Execute(const std::string& filePath) override;
 
   virtual void operator<<(const std::string& text) override;
   virtual void operator<<(unsigned long long number) override;
@@ -33,6 +34,10 @@ class ENGINE_EXPORT Console : public IConsole {
   virtual void operator<<(void* address) override;
 
   virtual ~Console() = default;
+
+ private:
+  std::map<std::string, IConVar*> convars;
+  std::map<std::string, ConCMD*> concmds;
 };
 }  // namespace AS::Engine
 

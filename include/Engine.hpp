@@ -11,11 +11,13 @@ namespace AS::Engine {
 
 class ENGINE_EXPORT Engine : public IEngine {
  public:
-  Engine(ILauncher* launcherInstance);
+  Engine();
 
   virtual void OnLoaded() override;
   virtual void OnRegisterOptions() override;
   virtual void OnUpdate() override;
+  virtual void OnEnabled() override;
+  virtual void OnDisabled() override;
 
   virtual void Quit() override;
   virtual void QuitOnError(const IError& error) override;
@@ -26,7 +28,7 @@ class ENGINE_EXPORT Engine : public IEngine {
   virtual ResultOrError<ModuleID> LoadModule(const std::string& name) override;
   virtual ResultOrError<ModuleID> FindModuleByName(
       const std::string& name) const override;
-  virtual const ModuleInfo GetModuleInfo(ModuleID module) const override;
+  virtual const ModuleInfo* GetModuleInfo(ModuleID module) const override;
   virtual void DeactivateModule(ModuleID module) override;
   virtual void ActivateModule(ModuleID module) override;
   virtual void UnloadModule(ModuleID module) override;

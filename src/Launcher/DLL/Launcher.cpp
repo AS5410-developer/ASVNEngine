@@ -12,11 +12,12 @@ Launcher::Launcher() {}
 void Launcher::OnLoaded() {
   auto result = SysLoadModule("./bin/libEngine.so");
   if (result.Failed()) {
-    LaunchFailed("Loading Engine module failed. %s", result.What());
+    LaunchFailed("Loading Engine module failed. %s", result.What().c_str());
     return;
   }
 
   EnginePtr = dynamic_cast<IEngine*>(result.GetResult()(nullptr));
+  EnginePtr->SetLauncherClass(this);
   EnginePtr->OnLoaded();
 }
 void Launcher::OnRegisterOptions() {}
@@ -28,6 +29,8 @@ void Launcher::OnUpdate() {
     }
   }
 }
+void Launcher::OnEnabled() {}
+void Launcher::OnDisabled() {}
 
 void Launcher::LaunchFailed(const char* reason, ...) {
   va_list args;
@@ -36,6 +39,8 @@ void Launcher::LaunchFailed(const char* reason, ...) {
   fprintf(stderr, "FATAL LAUNCH ERROR: ");
   fprintf(stderr, reason, args);
   fprintf(stderr, "\n");
+
+  Failed = true;
 
   va_end(args);
 }
@@ -48,7 +53,7 @@ ResultOrError<LibraryHandle> Launcher::SysLoadLibrary(const std::string& path) {
     std::cerr
         << "Launcher fatal error: cannot load launcher library\ndlerror(): "
         << err << std::endl;
-    return ResultOrError<LibraryHandle>(err);
+    return ResultOrError<LibraryHandle>(0, err, true);
   }
   return ResultOrError<LibraryHandle>(Lib);
 #endif
@@ -62,7 +67,7 @@ ResultOrError<void*> Launcher::SysGetFunc(LibraryHandle handle,
     std::cerr << "Launcher fatal error: cannot get \"Launch\" symbol from "
                  "loaded launcher library!\ndlerror(): "
               << err << std::endl;
-    return ResultOrError<LibraryHandle>(err);
+    return ResultOrError<LibraryHandle>(0, err, true);
   }
   return ResultOrError<LibraryHandle>(Func);
 #endif
@@ -78,7 +83,7 @@ ResultOrError<GetModuleAPIFunc> Launcher::SysGetModuleFunc(
   ResultOrError<void*> Func = SysGetFunc(handle, "GetModuleAPI");
 
   if (Func.Failed()) {
-    return ResultOrError<GetModuleAPIFunc>(Func.What());
+    return ResultOrError<GetModuleAPIFunc>(0, Func.What(), true);
   }
 
   return ResultOrError<GetModuleAPIFunc>(
@@ -87,7 +92,9 @@ ResultOrError<GetModuleAPIFunc> Launcher::SysGetModuleFunc(
 ResultOrError<GetModuleAPIFunc> Launcher::SysLoadModule(
     const std::string& path) {
   ResultOrError<LibraryHandle> Handle = SysLoadLibrary(path);
-  if (Handle.Failed()) return ResultOrError<GetModuleAPIFunc>(Handle.What());
+  if (Handle.Failed())
+    return ResultOrError<GetModuleAPIFunc>(0, Handle.What(), true);
 
   return SysGetModuleFunc(Handle.GetResult());
 }
+bool Launcher::IsFailed() { return Failed; }

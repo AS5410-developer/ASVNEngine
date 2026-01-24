@@ -17,11 +17,11 @@ struct ConCMD {
 
 class ENGINE_EXPORT IConsole {
  public:
-  virtual void RegisterConVar(const IConVar& convar) = 0;
-  virtual void RegisterConCmd(const ConCMD& concmd) = 0;
+  virtual void RegisterConVar(IConVar& convar) = 0;
+  virtual void RegisterConCmd(ConCMD& concmd) = 0;
 
-  virtual const IError ExecuteCommand(const std::string& command) = 0;
-  virtual const IError Execute(const std::string& filePath) = 0;
+  virtual const IError* ExecuteCommand(const std::string& command) = 0;
+  virtual const IError* Execute(const std::string& filePath) = 0;
 
   virtual void operator<<(const std::string& text) = 0;
   virtual void operator<<(unsigned long long number) = 0;
