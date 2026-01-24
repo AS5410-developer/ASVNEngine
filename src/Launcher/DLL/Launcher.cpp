@@ -15,8 +15,16 @@ void Launcher::OnLoaded() {
     LaunchFailed("Loading Engine module failed. %s", result.What().c_str());
     return;
   }
-
-  EnginePtr = dynamic_cast<IEngine*>(result.GetResult()(nullptr));
+  auto mod = result.GetResult()(nullptr);
+  if (!mod) {
+    LaunchFailed("Engine module get failed!");
+    return;
+  }
+  EnginePtr = dynamic_cast<IEngine*>(mod);
+  if (!EnginePtr) {
+    LaunchFailed("Engine module get failed!");
+    return;
+  }
   EnginePtr->SetLauncherClass(this);
   EnginePtr->OnLoaded();
 }
@@ -48,7 +56,7 @@ void Launcher::LaunchFailed(const char* reason, ...) {
 
 ResultOrError<LibraryHandle> Launcher::SysLoadLibrary(const std::string& path) {
 #ifdef __linux__
-  void* Lib = dlopen(path.c_str(), RTLD_NOW);
+  void* Lib = dlopen(path.c_str(), RTLD_NOW | RTLD_GLOBAL);
   if (!Lib) {
     char* err = dlerror();
     std::cerr

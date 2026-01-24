@@ -1,4 +1,5 @@
 #include <Engine.hpp>
+#include <chrono>
 #include <iostream>
 #include <thread>
 using namespace AS::Engine;
@@ -26,10 +27,11 @@ ModuleInfo& ModuleInfo::operator=(ModuleInfo&& other) {
 
 Engine::Engine() {}
 
-std::chrono::_V2::system_clock::time_point PrepareTick() {
+std::chrono::steady_clock::time_point PrepareTick() {
+  std::chrono::high_resolution_clock::now();
   return std::chrono::high_resolution_clock::now();
 }
-std::chrono::_V2::system_clock::time_point EndTick() {
+std::chrono::steady_clock::time_point EndTick() {
   return std::chrono::high_resolution_clock::now();
 }
 
@@ -49,10 +51,10 @@ void Engine::OnUpdate() {
   }
 }
 void Engine::OnTick() {
-  std::chrono::_V2::system_clock::time_point startTime;
-  std::chrono::_V2::system_clock::time_point endTime;
+  std::chrono::steady_clock::time_point startTime;
+  std::chrono::steady_clock::time_point endTime;
   int64_t end;
-  std::chrono::_V2::system_clock::time_point maxEndTime;
+  std::chrono::steady_clock::time_point maxEndTime;
   while (GetTickrate() != -1) {
     startTime = PrepareTick();
 

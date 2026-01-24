@@ -6,7 +6,7 @@ typedef void (*LaunchFunc)(int argc, char** argv);
 
 #ifdef __linux__
 int LoadLauncher(int argc, char** argv) {
-  void* Lib = dlopen("./bin/libLauncher.so", RTLD_NOW);
+  void* Lib = dlopen("./bin/libLauncher.so", RTLD_NOW | RTLD_GLOBAL);
   if (!Lib) {
     std::cerr << "Launcher fatal error: cannot load launcher library"
               << std::endl;
