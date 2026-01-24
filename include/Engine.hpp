@@ -16,6 +16,7 @@ class ENGINE_EXPORT Engine : public IEngine {
   virtual void OnLoaded() override;
   virtual void OnRegisterOptions() override;
   virtual void OnUpdate() override;
+  virtual void OnTick() override;
   virtual void OnEnabled() override;
   virtual void OnDisabled() override;
 
@@ -50,7 +51,7 @@ class ENGINE_EXPORT Engine : public IEngine {
  private:
   std::map<ModuleID, ModuleInfo> Modules;
   Tick CurrentTime;
-  Tick TickInSecond = 60;
+  Tick TickInSecond = 128;
   bool ServerFlag;
   bool Singleplayer;
   Console ConsoleInstance;

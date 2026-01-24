@@ -9,6 +9,7 @@ class ENGINE_EXPORT IModule {
   virtual void OnLoaded() = 0;
   virtual void OnRegisterOptions() = 0;
   virtual void OnUpdate() = 0;
+  virtual void OnTick() = 0;
   virtual void OnEnabled() = 0;
   virtual void OnDisabled() = 0;
   virtual ~IModule() = default;

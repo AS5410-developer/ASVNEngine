@@ -16,6 +16,7 @@ class Launcher : public ILauncher {
   virtual void OnLoaded() override;
   virtual void OnRegisterOptions() override;
   virtual void OnUpdate() override;
+  virtual void OnTick() override;
   virtual void OnEnabled() override;
   virtual void OnDisabled() override;
 

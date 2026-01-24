@@ -26,12 +26,55 @@ ModuleInfo& ModuleInfo::operator=(ModuleInfo&& other) {
 
 Engine::Engine() {}
 
-void Engine::OnLoaded() {}
+std::chrono::_V2::system_clock::time_point PrepareTick() {
+  return std::chrono::high_resolution_clock::now();
+}
+std::chrono::_V2::system_clock::time_point EndTick() {
+  return std::chrono::high_resolution_clock::now();
+}
+
+void Engine::OnLoaded() {
+  std::thread tickThread([&]() { OnTick(); });
+  tickThread.detach();
+  ConsoleInstance << "Current engine's address in process virtual memory: "
+                  << this << EndLine;
+}
 void Engine::OnRegisterOptions() {}
 void Engine::OnUpdate() {
   for (uint64_t i = 0; i < Modules.size(); ++i) {
-    if (Modules[i].Activated)
+    if (Modules[i].Activated) {
       std::thread updateCall([&]() { Modules[i].Module->OnUpdate(); });
+      updateCall.detach();
+    }
+  }
+}
+void Engine::OnTick() {
+  std::chrono::_V2::system_clock::time_point startTime;
+  std::chrono::_V2::system_clock::time_point endTime;
+  int64_t end;
+  std::chrono::_V2::system_clock::time_point maxEndTime;
+  while (GetTickrate() != -1) {
+    startTime = PrepareTick();
+
+    for (uint64_t i = 0; i < Modules.size(); ++i) {
+      if (Modules[i].Activated) Modules[i].Module->OnTick();
+    }
+    ConsoleInstance << "Tickrate: " << TickInSecond << " "
+                    << "Tick: " << CurrentTime << EndLine;
+    ++CurrentTime;
+
+    endTime = EndTick();
+
+    end = std::chrono::duration_cast<std::chrono::milliseconds>(
+              endTime.time_since_epoch())
+              .count();
+    maxEndTime = startTime + std::chrono::milliseconds(
+                                 (int64_t)((1 / (double)TickInSecond) * 1000));
+    if (std::chrono::duration_cast<std::chrono::milliseconds>(
+            maxEndTime.time_since_epoch())
+            .count() > end) {
+      std::this_thread::sleep_until(maxEndTime);
+    }
   }
 }
 void Engine::OnEnabled() {}
@@ -58,6 +101,7 @@ ModuleID Engine::AddModule(IModule* module) {
   return info.ID;
 }
 void Engine::RemoveModule(ModuleID module) {
+  if (!Modules.contains(module)) return;
   DeactivateModule(module);
   Modules.erase(module);
 }
@@ -87,19 +131,32 @@ ResultOrError<ModuleID> Engine::LoadModule(const std::string& name) {
   return info.ID;
 }
 ResultOrError<ModuleID> Engine::FindModuleByName(
-    const std::string& name) const {}
+    const std::string& name) const {
+  ModuleID moduleID = 0;
+  auto ID = std::find_if(
+      Modules.begin(), Modules.end(),
+      [&name](
+          const std::pair<const AS::Engine::ModuleID, AS::Engine::ModuleInfo>&
+              entry) { return *entry.second.Name == name; });
+
+  if (ID == Modules.end())
+    return ResultOrError<ModuleID>(0, "Module not found", true);
+  return ID->first;
+}
 const ModuleInfo* Engine::GetModuleInfo(ModuleID module) const {
   return &Modules.at(module);
 }
 void Engine::DeactivateModule(ModuleID module) {
+  if (!Modules.contains(module)) return;
   if (!Modules[module].Activated) return;
   Modules[module].Module->OnDisabled();
   Modules[module].Activated = false;
 }
 void Engine::ActivateModule(ModuleID module) {
+  if (!Modules.contains(module)) return;
   if (Modules[module].Activated) return;
-  Modules[module].Module->OnEnabled();
   Modules[module].Activated = true;
+  Modules[module].Module->OnEnabled();
 }
 void Engine::UnloadModule(ModuleID module) {
   DeactivateModule(module);

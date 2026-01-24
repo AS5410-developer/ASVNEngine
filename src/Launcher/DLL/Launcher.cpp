@@ -29,6 +29,7 @@ void Launcher::OnUpdate() {
     }
   }
 }
+void Launcher::OnTick() {}
 void Launcher::OnEnabled() {}
 void Launcher::OnDisabled() {}
 

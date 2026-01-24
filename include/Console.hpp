@@ -20,24 +20,28 @@ class ENGINE_EXPORT Console : public IConsole {
   virtual const IError* ExecuteCommand(const std::string& command) override;
   virtual const IError* Execute(const std::string& filePath) override;
 
-  virtual void operator<<(const std::string& text) override;
-  virtual void operator<<(unsigned long long number) override;
-  virtual void operator<<(long long number) override;
-  virtual void operator<<(unsigned int number) override;
-  virtual void operator<<(int number) override;
-  virtual void operator<<(unsigned short number) override;
-  virtual void operator<<(short number) override;
-  virtual void operator<<(unsigned char number) override;
-  virtual void operator<<(char number) override;
-  virtual void operator<<(const char* text) override;
-  virtual void operator<<(char* text) override;
-  virtual void operator<<(void* address) override;
+  virtual IConsole& operator<<(const std::string& text) override;
+  virtual IConsole& operator<<(unsigned long long number) override;
+  virtual IConsole& operator<<(long long number) override;
+  virtual IConsole& operator<<(unsigned int number) override;
+  virtual IConsole& operator<<(int number) override;
+  virtual IConsole& operator<<(unsigned short number) override;
+  virtual IConsole& operator<<(short number) override;
+  virtual IConsole& operator<<(unsigned char number) override;
+  virtual IConsole& operator<<(char number) override;
+  virtual IConsole& operator<<(const char* text) override;
+  virtual IConsole& operator<<(char* text) override;
+  virtual IConsole& operator<<(void* address) override;
+  virtual IConsole& operator<<(IConsole& (*manipulator)(IConsole&)) override;
+  virtual void NewLine() override;
+  virtual void Flush() override;
 
-  virtual ~Console() = default;
+  virtual ~Console();
 
  private:
   std::map<std::string, IConVar*> convars;
   std::map<std::string, ConCMD*> concmds;
+  std::string Buffer;
 };
 }  // namespace AS::Engine
 
