@@ -74,6 +74,7 @@ void Console::NewLine() {
 }
 void Console::Flush() {
   std::cout << Buffer.c_str();
+  if (handler) handler(Buffer);
   Buffer.clear();
 }
 Console::~Console() {}
@@ -86,3 +87,6 @@ IConsole& AS::Engine::Flush(IConsole& console) {
   console.Flush();
   return console;
 }
+
+void Console::SetFlushHandler(FlushHandler handler) { this->handler = handler; }
+IConsole::FlushHandler Console::GetFlushHandler() { return handler; }

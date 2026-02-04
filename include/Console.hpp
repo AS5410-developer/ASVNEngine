@@ -36,12 +36,16 @@ class ENGINE_EXPORT Console : public IConsole {
   virtual void NewLine() override;
   virtual void Flush() override;
 
+  virtual void SetFlushHandler(FlushHandler handler) override;
+  virtual FlushHandler GetFlushHandler() override;
+
   virtual ~Console();
 
  private:
   std::map<std::string, IConVar*> convars;
   std::map<std::string, ConCMD*> concmds;
   std::string Buffer;
+  FlushHandler handler;
 };
 }  // namespace AS::Engine
 

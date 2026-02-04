@@ -19,6 +19,8 @@ struct ConCMD {
 
 class ENGINE_EXPORT IConsole {
  public:
+  typedef void (*FlushHandler)(const std::string&);
+
   virtual void RegisterConVar(IConVar& convar) = 0;
   virtual void RegisterConCmd(ConCMD& concmd) = 0;
 
@@ -40,6 +42,9 @@ class ENGINE_EXPORT IConsole {
   virtual IConsole& operator<<(IConsole& (*manipulator)(IConsole&)) = 0;
   virtual void NewLine() = 0;
   virtual void Flush() = 0;
+
+  virtual void SetFlushHandler(FlushHandler handler) = 0;
+  virtual FlushHandler GetFlushHandler() = 0;
 
   virtual ~IConsole() = default;
 };
