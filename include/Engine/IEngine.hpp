@@ -44,7 +44,7 @@ class ENGINE_EXPORT IEngine : public IModule {
 
   virtual void SetLauncherClass(ILauncher* launcher) = 0;
 
-  virtual IConsole* GetConsole() = 0;
+  virtual IConsole& GetConsole() = 0;
 
   virtual Tick GetCurrentTime() const = 0;
   virtual Tick GetTickrate() const = 0;
@@ -53,6 +53,9 @@ class ENGINE_EXPORT IEngine : public IModule {
   virtual bool IsSingleplayer() const = 0;
 
   virtual void SetIsSingleplayer(bool newFlag) = 0;
+
+  virtual int GetStartArgc() = 0;
+  virtual char** GetStartArgv() = 0;
 
   virtual ~IEngine() = default;
 };

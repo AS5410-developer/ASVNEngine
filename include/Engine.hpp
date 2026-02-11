@@ -36,7 +36,7 @@ class ENGINE_EXPORT Engine : public IEngine {
 
   virtual void SetLauncherClass(ILauncher* launcher) override;
 
-  virtual IConsole* GetConsole() override;
+  virtual IConsole& GetConsole() override;
 
   virtual Tick GetCurrentTime() const override;
   virtual Tick GetTickrate() const override;
@@ -45,6 +45,9 @@ class ENGINE_EXPORT Engine : public IEngine {
   virtual bool IsSingleplayer() const override;
 
   virtual void SetIsSingleplayer(bool newFlag) override;
+
+  virtual int GetStartArgc() override;
+  virtual char** GetStartArgv() override;
 
   virtual ~Engine() = default;
 

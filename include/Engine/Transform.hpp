@@ -8,7 +8,7 @@
 namespace AS::Engine {
 class ENGINE_EXPORT Transform {
  public:
-  Transform();
+  Transform() = default;
 
   void SetParent(const Transform* parent);
   void SetPosition(const glm::vec2& pos);

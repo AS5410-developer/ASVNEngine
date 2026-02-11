@@ -7,19 +7,23 @@
 #include <Render/IShader.hpp>
 
 namespace AS::Engine {
+class ENGINE_EXPORT IShader;
+class ENGINE_EXPORT IImage;
 class ENGINE_EXPORT ISprite {
  public:
-  virtual void SetImage(const IImage& image) = 0;
-  virtual void SetShader(const IShader& shader) = 0;
-  virtual void SetTranform(const Transform& transform) = 0;
+  virtual void SetImage(IImage& image) = 0;
+  virtual void SetShader(IShader& shader) = 0;
+  virtual void SetTransform(Transform& transform) = 0;
 
   virtual IImage& GetImage() const = 0;
   virtual IShader& GetShader() const = 0;
-  virtual Transform& GetTranform() const = 0;
+  virtual Transform& GetTransform() = 0;
 
   virtual void Destroy() = 0;
 
   virtual ~ISprite() = default;
+
+ private:
 };
 }  // namespace AS::Engine
 

@@ -5,8 +5,6 @@
 
 using namespace AS::Engine;
 
-Transform::Transform() {}
-
 void Transform::SetParent(const Transform* parent) { Parent = parent; }
 void Transform::SetPosition(const glm::vec2& pos) { Position = pos; }
 void Transform::SetRotation(float rot) { Rotation = rot; }

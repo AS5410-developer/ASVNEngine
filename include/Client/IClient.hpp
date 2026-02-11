@@ -1,5 +1,5 @@
-#ifndef INC_SERVER_ICLIENT_HPP
-#define INC_SERVER_ICLIENT_HPP
+#ifndef INC_CLIENT_ICLIENT_HPP
+#define INC_CLIENT_ICLIENT_HPP
 
 #include <Base/IModule.hpp>
 

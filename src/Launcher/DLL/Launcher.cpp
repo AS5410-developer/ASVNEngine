@@ -7,7 +7,7 @@
 
 using namespace AS::Engine;
 
-Launcher::Launcher() {}
+Launcher::Launcher(int argc, char** argv) : argc(argc), argv(argv) {}
 
 void Launcher::OnLoaded() {
   auto result = SysLoadModule("./bin/libEngine.so");
@@ -107,3 +107,6 @@ ResultOrError<GetModuleAPIFunc> Launcher::SysLoadModule(
   return SysGetModuleFunc(Handle.GetResult());
 }
 bool Launcher::IsFailed() { return Failed; }
+
+int Launcher::GetStartArgc() { return argc; }
+char** Launcher::GetStartArgv() { return argv; }

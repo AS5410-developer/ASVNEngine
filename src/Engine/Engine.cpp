@@ -36,6 +36,9 @@ std::chrono::steady_clock::time_point EndTick() {
 }
 
 void Engine::OnLoaded() {
+  LoadModule("libClient.so");
+  LoadModule("libOpenGL.so");
+
   std::thread tickThread([&]() { OnTick(); });
   tickThread.detach();
   ConsoleInstance << "Current engine's address in process virtual memory: "
@@ -127,7 +130,7 @@ ResultOrError<ModuleID> Engine::LoadModule(const std::string& name) {
   info.Activated = true;
   info.Handle = Lib.GetResult();
 
-  Modules[info.ID] = std::move(info);
+  Modules[info.ID] = info;
   info.Module->OnLoaded();
 
   return info.ID;
@@ -174,7 +177,7 @@ void Engine::SetLauncherClass(ILauncher* launcher) {
   LauncherInstance = launcher;
 }
 
-IConsole* Engine::GetConsole() { return &ConsoleInstance; }
+IConsole& Engine::GetConsole() { return ConsoleInstance; }
 
 Tick Engine::GetCurrentTime() const { return CurrentTime; }
 Tick Engine::GetTickrate() const { return TickInSecond; }
@@ -183,3 +186,6 @@ bool Engine::IsServer() const { return ServerFlag; }
 bool Engine::IsSingleplayer() const { return Singleplayer; }
 
 void Engine::SetIsSingleplayer(bool newFlag) { Singleplayer = newFlag; }
+
+int Engine::GetStartArgc() { return LauncherInstance->GetStartArgc(); }
+char** Engine::GetStartArgv() { return LauncherInstance->GetStartArgv(); }

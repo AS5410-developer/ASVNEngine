@@ -1,0 +1,17 @@
+#include <Base/FileNotFound.hpp>
+
+using namespace AS::Engine;
+
+FileNotFoundError::FileNotFoundError() {}
+FileNotFoundError::FileNotFoundError(const std::string& name) {
+  if (name.empty()) return;
+  Path = name;
+}
+
+const std::string& FileNotFoundError::What() const {
+  return std::string("File \"") + Path + "\" not found!";
+}
+bool FileNotFoundError::Failed() const { return IsFailed; }
+IError::LogLevel FileNotFoundError::GetLogLevel() const {
+  return LogLevel::LL_ERROR;
+}

@@ -1,6 +1,7 @@
 #ifndef INC_RENDER_IIMAGE_HPP
 #define INC_RENDER_IIMAGE_HPP
 
+#include <Base/IError.hpp>
 #include <Render/IRender.hpp>
 #include <string>
 
@@ -10,7 +11,7 @@ class ENGINE_EXPORT IImage {
   virtual void SetPath(const std::string& path) = 0;
   virtual const std::string GetPath() = 0;
 
-  virtual void Precache() = 0;
+  virtual IError* Precache() = 0;
   virtual bool IsLoaded() = 0;
   virtual unsigned long long GetWidth() = 0;
   virtual unsigned long long GetHeight() = 0;

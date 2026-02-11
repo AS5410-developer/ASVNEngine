@@ -1,11 +1,14 @@
-#ifndef INC_QT_GUI_HPP
-#define INC_QT_GUI_HPP
+#ifndef INC_CLIENT_HPP
+#define INC_CLIENT_HPP
 
-#include <GUI/IGUI.hpp>
+#include <Client/IClient.hpp>
+#include <Engine/IEngine.hpp>
 
 namespace AS::Engine {
-class ENGINE_EXPORT GUI : public IGUI {
+class Client : public IClient {
  public:
+  Client();
+
   virtual void OnLoaded() override;
   virtual void OnRegisterOptions() override;
   virtual void OnUpdate() override;
@@ -13,9 +16,12 @@ class ENGINE_EXPORT GUI : public IGUI {
   virtual void OnEnabled() override;
   virtual void OnDisabled() override;
 
-  virtual IScreen* LoadScreen(const char* name) override;
+  static void SetEngine(IEngine* engine);
 
-  virtual ~GUI() = default;
+  virtual ~Client() = default;
+
+ private:
+  static IEngine* EngineInstance;
 };
 }  // namespace AS::Engine
 

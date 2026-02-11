@@ -11,7 +11,7 @@ namespace AS::Engine {
 
 class Launcher : public ILauncher {
  public:
-  Launcher();
+  Launcher(int argc, char** argv);
 
   virtual void OnLoaded() override;
   virtual void OnRegisterOptions() override;
@@ -34,11 +34,16 @@ class Launcher : public ILauncher {
   void LaunchFailed(const char* reason, ...);
   bool IsFailed();
 
+  virtual int GetStartArgc() override;
+  virtual char** GetStartArgv() override;
+
   virtual ~Launcher() = default;
 
  private:
   IEngine* EnginePtr;
   bool Failed = false;
+  int argc;
+  char** argv;
 };
 }  // namespace AS::Engine
 

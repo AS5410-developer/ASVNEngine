@@ -29,6 +29,9 @@ class ENGINE_EXPORT ILauncher : public IModule {
   virtual ResultOrError<GetModuleAPIFunc> SysLoadModule(
       const std::string& path) = 0;
 
+  virtual int GetStartArgc() = 0;
+  virtual char** GetStartArgv() = 0;
+
   virtual ~ILauncher() = default;
 };
 }  // namespace AS::Engine

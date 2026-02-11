@@ -3,7 +3,7 @@
 
 using namespace AS::Engine;
 
-Console::Console() {}
+Console::Console() { Buffer.clear(); }
 
 void Console::RegisterConVar(IConVar& convar) {
   convars[convar.GetName()] = &convar;

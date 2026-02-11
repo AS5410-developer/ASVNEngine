@@ -3,12 +3,12 @@
 #include <Launcher.hpp>
 #include <iostream>
 
-extern "C" void Launch(int argc, char** argv) {
+extern "C" LAUNCHER_EXPORT void Launch(int argc, char** argv) {
   std::cout << "Launcher Library started!\nStarting Engine..." << std::endl;
-  AS::Engine::Launcher Launcher;
+  AS::Engine::Launcher Launcher(argc, argv);
   Launcher.OnRegisterOptions();
   Launcher.OnLoaded();
-  while (!Launcher.IsFailed()) {
+  if (!Launcher.IsFailed()) {
     Launcher.OnUpdate();
   }
 }
