@@ -34,7 +34,19 @@ void Engine::OnLoaded() {
     ClientInstance =
         dynamic_cast<IClient*>(GetModuleInfo(result.GetResult())->Module);
 
-    result = LoadModule("libOpenGL.so");
+    auto wind = PlatformInstance->CreateWindow();
+    if (wind.Failed()) {
+      QuitOnError(wind);
+      return;
+    }
+    MainWindow = wind.GetResult();
+    MainWindow->SetSize({600, 600});
+    MainWindow->SetTitle("AS 2D Engine");
+    MainWindow->SetSurfaceType(AS_ENGINE_IWINDOW_SURFACETYPE_VULKAN);
+    MainWindow->Initialize();
+    MainWindow->SetFullscreen(true);
+
+    result = LoadModule("libVideoVk.so");
     if (result.Failed()) {
       QuitOnError(result);
       return;
@@ -47,17 +59,6 @@ void Engine::OnLoaded() {
   tickThread.detach();
   ConsoleInstance << "Current engine's address in process virtual memory: "
                   << this << EndLine;
-
-  auto wind = PlatformInstance->CreateWindow();
-  if (wind.Failed()) {
-    QuitOnError(wind);
-    return;
-  }
-  MainWindow = wind.GetResult();
-  MainWindow->SetSize({600, 600});
-  MainWindow->SetTitle("AS 2D Engine");
-  MainWindow->Initialize();
-  MainWindow->SetFullscreen(true);
 }
 void Engine::OnRegisterOptions() {}
 void Engine::OnUpdate() {

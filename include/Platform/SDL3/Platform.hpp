@@ -18,6 +18,7 @@ class Platform : public IPlatform {
   virtual void OnDisabled() override;
 
   static void SetEngine(IEngine* engine) { EngineInstance = engine; }
+  static IEngine* GetEngine() { return EngineInstance; }
 
   virtual ResultOrError<IWindow*> CreateWindow() override;
   virtual ResultOrError<IMutex*> CreateMutex() override;
