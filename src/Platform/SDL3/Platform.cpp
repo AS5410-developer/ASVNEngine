@@ -18,7 +18,9 @@ void Platform::OnDisabled() { SDL_Quit(); }
 ResultOrError<IWindow*> Platform::CreateWindow() { return new Window; }
 ResultOrError<IMutex*> Platform::CreateMutex() { return new Mutex; }
 
-void Platform::SetCursorCoords(const CursorCoords& coords) {}
+void Platform::SetCursorCoords(const CursorCoords& coords) {
+  SDL_WarpMouseGlobal(coords.x, coords.y);
+}
 void Platform::SetCursorState(bool hide) {
   if (hide)
     SDL_HideCursor();
