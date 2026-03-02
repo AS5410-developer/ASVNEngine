@@ -16,7 +16,7 @@ class ENGINE_EXPORT ResultOrError : public IError {
 
   T& GetResult();
 
-  virtual const std::string& What() const override;
+  virtual const std::string What() const override;
   virtual bool Failed() const override;
   virtual IError::LogLevel GetLogLevel() const override;
 
@@ -37,7 +37,7 @@ T& ResultOrError<T>::GetResult() {
   return Result;
 }
 template <typename T>
-const std::string& ResultOrError<T>::What() const {
+const std::string ResultOrError<T>::What() const {
   return TError;
 }
 template <typename T>

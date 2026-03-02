@@ -7,6 +7,6 @@ generate_export_header(OpenGL
     BASE_NAME OPENGL
 )
 
-target_include_directories(OpenGL PRIVATE ${CMAKE_BINARY_DIR} ${WebP_INCLUDE_DIRS})
+target_include_directories(OpenGL PRIVATE ${WebP_INCLUDE_DIRS})
 
 target_link_libraries(OpenGL PRIVATE ${WebP_LIBRARIES})

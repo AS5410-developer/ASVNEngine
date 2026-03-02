@@ -6,13 +6,16 @@
 #include <Base/IError.hpp>
 #include <Engine/IConVar.hpp>
 #include <Engine/IConsole.hpp>
+#include <Engine/IEngine.hpp>
+#include <Platform/IMutex.hpp>
 #include <map>
 
 namespace AS::Engine {
 
-class ENGINE_EXPORT Console : public IConsole {
+class ENGINE_EXPORT Console final : public IConsole {
  public:
-  Console();
+  Console() {}
+  Console(IEngine* engine);
 
   virtual void RegisterConVar(IConVar& convar) override;
   virtual void RegisterConCmd(ConCMD& concmd) override;
@@ -36,16 +39,20 @@ class ENGINE_EXPORT Console : public IConsole {
   virtual void NewLine() override;
   virtual void Flush() override;
 
-  virtual void SetFlushHandler(FlushHandler handler) override;
-  virtual FlushHandler GetFlushHandler() override;
+  virtual void SetFlushHandler(FlushHandler handler) override {
+    this->Handler = handler;
+  }
+  virtual FlushHandler GetFlushHandler() override { return Handler; }
 
   virtual ~Console();
 
  private:
-  std::map<std::string, IConVar*> convars;
-  std::map<std::string, ConCMD*> concmds;
-  std::string Buffer;
-  FlushHandler handler;
+  IEngine* EngineInstance;
+  IMutex* Buffer;
+  IMutex* Output;
+  std::map<std::string, IConVar*> Convars;
+  std::map<std::string, ConCMD*> Concmds;
+  FlushHandler Handler;
 };
 }  // namespace AS::Engine
 

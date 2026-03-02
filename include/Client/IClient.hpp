@@ -6,6 +6,7 @@
 namespace AS::Engine {
 class ENGINE_EXPORT IClient : public IModule {
  public:
+  virtual void OnWindowUpdate() = 0;
   virtual ~IClient() = default;
 };
 }  // namespace AS::Engine

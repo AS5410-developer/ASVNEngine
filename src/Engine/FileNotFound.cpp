@@ -8,10 +8,6 @@ FileNotFoundError::FileNotFoundError(const std::string& name) {
   Path = name;
 }
 
-const std::string& FileNotFoundError::What() const {
+const std::string FileNotFoundError::What() const {
   return std::string("File \"") + Path + "\" not found!";
-}
-bool FileNotFoundError::Failed() const { return IsFailed; }
-IError::LogLevel FileNotFoundError::GetLogLevel() const {
-  return LogLevel::LL_ERROR;
 }

@@ -106,7 +106,3 @@ ResultOrError<GetModuleAPIFunc> Launcher::SysLoadModule(
 
   return SysGetModuleFunc(Handle.GetResult());
 }
-bool Launcher::IsFailed() { return Failed; }
-
-int Launcher::GetStartArgc() { return argc; }
-char** Launcher::GetStartArgv() { return argv; }

@@ -9,7 +9,7 @@
 
 namespace AS::Engine {
 
-class ENGINE_EXPORT Engine : public IEngine {
+class ENGINE_EXPORT Engine final : public IEngine {
  public:
   Engine();
 
@@ -34,29 +34,46 @@ class ENGINE_EXPORT Engine : public IEngine {
   virtual void ActivateModule(ModuleID module) override;
   virtual void UnloadModule(ModuleID module) override;
 
-  virtual void SetLauncherClass(ILauncher* launcher) override;
+  virtual void SetLauncherClass(ILauncher* launcher) override {
+    LauncherInstance = launcher;
+  }
 
-  virtual IConsole& GetConsole() override;
+  virtual IConsole& GetConsole() override { return ConsoleInstance; }
+  virtual IClient* GetClient() override { return ClientInstance; }
+  virtual IRender* GetRender() override { return RenderInstance; }
+  virtual IPlatform& GetPlatform() override { return *PlatformInstance; }
 
-  virtual Tick GetCurrentTime() const override;
-  virtual Tick GetTickrate() const override;
+  virtual Tick GetCurrentTime() const override { return CurrentTime; }
+  virtual Tick GetTickrate() const override { return TickInSecond; }
 
-  virtual bool IsServer() const override;
-  virtual bool IsSingleplayer() const override;
+  virtual bool IsServer() const override { return ServerFlag; }
+  virtual bool IsSingleplayer() const override { return Singleplayer; }
 
-  virtual void SetIsSingleplayer(bool newFlag) override;
+  virtual void SetIsSingleplayer(bool newFlag) override {
+    Singleplayer = newFlag;
+  }
 
-  virtual int GetStartArgc() override;
-  virtual char** GetStartArgv() override;
+  virtual int GetStartArgc() override {
+    return LauncherInstance->GetStartArgc();
+  }
+  virtual char** GetStartArgv() override {
+    return LauncherInstance->GetStartArgv();
+  }
 
   virtual ~Engine() = default;
 
  private:
+  std::chrono::steady_clock::time_point PrepareTick();
+  std::chrono::steady_clock::time_point EndTick();
+
   std::map<ModuleID, ModuleInfo> Modules;
   Tick CurrentTime;
   Tick TickInSecond = 20;
   bool ServerFlag;
   bool Singleplayer;
+  IClient* ClientInstance;
+  IRender* RenderInstance;
+  IPlatform* PlatformInstance;
   Console ConsoleInstance;
   ILauncher* LauncherInstance;
 };

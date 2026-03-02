@@ -7,8 +7,11 @@
 #include <Base/IModule.hpp>
 #include <Base/ResultOrError.hpp>
 #include <Base/Types.hpp>
+#include <Client/IClient.hpp>
 #include <Engine/IConsole.hpp>
 #include <Launcher/ILauncher.hpp>
+#include <Platform/IPlatform.hpp>
+#include <Render/IRender.hpp>
 #include <string>
 
 namespace AS::Engine {
@@ -45,6 +48,9 @@ class ENGINE_EXPORT IEngine : public IModule {
   virtual void SetLauncherClass(ILauncher* launcher) = 0;
 
   virtual IConsole& GetConsole() = 0;
+  virtual IClient* GetClient() = 0;
+  virtual IRender* GetRender() = 0;
+  virtual IPlatform& GetPlatform() = 0;
 
   virtual Tick GetCurrentTime() const = 0;
   virtual Tick GetTickrate() const = 0;

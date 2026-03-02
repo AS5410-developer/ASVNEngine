@@ -9,7 +9,7 @@
 
 namespace AS::Engine {
 
-class Launcher : public ILauncher {
+class Launcher final : public ILauncher {
  public:
   Launcher(int argc, char** argv);
 
@@ -32,10 +32,10 @@ class Launcher : public ILauncher {
       const std::string& path) override;
 
   void LaunchFailed(const char* reason, ...);
-  bool IsFailed();
+  bool IsFailed() { return Failed; }
 
-  virtual int GetStartArgc() override;
-  virtual char** GetStartArgv() override;
+  virtual int GetStartArgc() override { return argc; }
+  virtual char** GetStartArgv() override { return argv; }
 
   virtual ~Launcher() = default;
 

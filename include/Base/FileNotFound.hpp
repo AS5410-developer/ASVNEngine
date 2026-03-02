@@ -10,9 +10,9 @@ class ENGINE_EXPORT FileNotFoundError : public IError {
   FileNotFoundError();
   FileNotFoundError(const std::string& name);
 
-  virtual const std::string& What() const override;
-  virtual bool Failed() const override;
-  virtual LogLevel GetLogLevel() const override;
+  virtual const std::string What() const override;
+  virtual bool Failed() const override { return IsFailed; }
+  virtual LogLevel GetLogLevel() const override { return LogLevel::LL_ERROR; }
 
   virtual ~FileNotFoundError() = default;
 

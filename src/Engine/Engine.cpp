@@ -27,17 +27,42 @@ ModuleInfo& ModuleInfo::operator=(ModuleInfo&& other) {
 
 Engine::Engine() {}
 
-std::chrono::steady_clock::time_point PrepareTick() {
+std::chrono::steady_clock::time_point Engine::PrepareTick() {
   std::chrono::high_resolution_clock::now();
   return std::chrono::high_resolution_clock::now();
 }
-std::chrono::steady_clock::time_point EndTick() {
+std::chrono::steady_clock::time_point Engine::EndTick() {
   return std::chrono::high_resolution_clock::now();
 }
 
 void Engine::OnLoaded() {
-  LoadModule("libClient.so");
-  LoadModule("libOpenGL.so");
+  auto result = LoadModule("libPlatformSDL3.so");
+  if (result.Failed()) {
+    QuitOnError(result);
+    return;
+  }
+  PlatformInstance =
+      dynamic_cast<IPlatform*>(GetModuleInfo(result.GetResult())->Module);
+
+  ConsoleInstance = Console(this);
+
+  if (!IsServer()) {
+    result = LoadModule("libClient.so");
+    if (result.Failed()) {
+      QuitOnError(result);
+      return;
+    }
+    ClientInstance =
+        dynamic_cast<IClient*>(GetModuleInfo(result.GetResult())->Module);
+
+    result = LoadModule("libOpenGL.so");
+    if (result.Failed()) {
+      QuitOnError(result);
+      return;
+    }
+    RenderInstance =
+        dynamic_cast<IRender*>(GetModuleInfo(result.GetResult())->Module);
+  }
 
   std::thread tickThread([&]() { OnTick(); });
   tickThread.detach();
@@ -126,6 +151,8 @@ ResultOrError<ModuleID> Engine::LoadModule(const std::string& name) {
   }
 
   info.Module = Proc.GetResult()(this);
+  if (!info.Module)
+    return ResultOrError<ModuleID>(0, "Module pointer = 0", true);
   info.LoadedByEngine = true;
   info.Activated = true;
   info.Handle = Lib.GetResult();
@@ -172,20 +199,3 @@ void Engine::UnloadModule(ModuleID module) {
   LauncherInstance->SysUnloadLibrary(Modules[module].Handle);
   Modules.erase(module);
 }
-
-void Engine::SetLauncherClass(ILauncher* launcher) {
-  LauncherInstance = launcher;
-}
-
-IConsole& Engine::GetConsole() { return ConsoleInstance; }
-
-Tick Engine::GetCurrentTime() const { return CurrentTime; }
-Tick Engine::GetTickrate() const { return TickInSecond; }
-
-bool Engine::IsServer() const { return ServerFlag; }
-bool Engine::IsSingleplayer() const { return Singleplayer; }
-
-void Engine::SetIsSingleplayer(bool newFlag) { Singleplayer = newFlag; }
-
-int Engine::GetStartArgc() { return LauncherInstance->GetStartArgc(); }
-char** Engine::GetStartArgv() { return LauncherInstance->GetStartArgv(); }

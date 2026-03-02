@@ -5,7 +5,7 @@
 #include <Engine/IEngine.hpp>
 
 namespace AS::Engine {
-class Client : public IClient {
+class Client final : public IClient {
  public:
   Client();
 
@@ -15,6 +15,9 @@ class Client : public IClient {
   virtual void OnTick() override;
   virtual void OnEnabled() override;
   virtual void OnDisabled() override;
+
+  virtual void OnWindowUpdate() override;
+  void WindowThread();
 
   static void SetEngine(IEngine* engine);
 
