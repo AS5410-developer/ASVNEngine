@@ -4,27 +4,6 @@
 #include <thread>
 using namespace AS::Engine;
 
-ModuleInfo& ModuleInfo::operator=(const ModuleInfo& other) {
-  ModuleInfo* info = new ModuleInfo{.ID = other.ID,
-                                    .Handle = other.Handle,
-                                    .Name = other.Name,
-                                    .Module = other.Module,
-                                    .Activated = other.Activated,
-                                    .LoadedByEngine = other.LoadedByEngine};
-  return *info;
-}
-
-ModuleInfo& ModuleInfo::operator=(ModuleInfo&& other) {
-  ModuleInfo* info = new ModuleInfo{.ID = other.ID,
-                                    .Handle = other.Handle,
-                                    .Name = other.Name,
-                                    .Module = other.Module,
-                                    .Activated = other.Activated,
-                                    .LoadedByEngine = other.LoadedByEngine};
-  delete[] &other;
-  return *info;
-}
-
 Engine::Engine() {}
 
 std::chrono::steady_clock::time_point Engine::PrepareTick() {
@@ -72,8 +51,10 @@ void Engine::OnLoaded() {
 void Engine::OnRegisterOptions() {}
 void Engine::OnUpdate() {
   for (uint64_t i = 0; i < Modules.size(); ++i) {
+    if (!Modules.contains(i)) continue;
     if (Modules[i].Activated) {
-      std::thread updateCall([&]() { Modules[i].Module->OnUpdate(); });
+      auto mod = Modules[i].Module;
+      std::thread updateCall([mod]() { mod->OnUpdate(); });
       updateCall.detach();
     }
   }
@@ -87,6 +68,7 @@ void Engine::OnTick() {
     startTime = PrepareTick();
 
     for (uint64_t i = 0; i < Modules.size(); ++i) {
+      if (!Modules.contains(i)) continue;
       if (Modules[i].Activated) Modules[i].Module->OnTick();
     }
     ConsoleInstance << "Tickrate: " << TickInSecond << " "

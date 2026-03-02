@@ -47,12 +47,12 @@ class ENGINE_EXPORT Console final : public IConsole {
   virtual ~Console();
 
  private:
-  IEngine* EngineInstance;
-  IMutex* Buffer;
-  IMutex* Output;
+  IEngine* EngineInstance = 0;
+  IMutex* Buffer = 0;
+  IMutex* Output = 0;
   std::map<std::string, IConVar*> Convars;
   std::map<std::string, ConCMD*> Concmds;
-  FlushHandler Handler;
+  FlushHandler Handler = 0;
 };
 }  // namespace AS::Engine
 

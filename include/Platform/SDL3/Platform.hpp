@@ -6,9 +6,9 @@
 #include <Platform/IPlatform.hpp>
 
 namespace AS::Engine {
-class Platform final : public IPlatform {
+class Platform : public IPlatform {
  public:
-  Platform();
+  Platform() {}
 
   virtual void OnLoaded() override;
   virtual void OnRegisterOptions() override;
@@ -23,7 +23,7 @@ class Platform final : public IPlatform {
   virtual ResultOrError<IMutex*> CreateMutex() override;
 
   virtual void SetCursorCoords(const CursorCoords& coords) override;
-  virtual void SetCursorState(bool locked = false) override;
+  virtual void SetCursorState(bool hide = false, bool locked = false) override;
   virtual CursorCoords GetCursorCoords() override;
 
   virtual ~Platform() = default;

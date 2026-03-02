@@ -24,9 +24,6 @@ struct ModuleInfo {
   IModule* Module;
   bool Activated;
   bool LoadedByEngine;
-
-  ModuleInfo& operator=(const ModuleInfo&);
-  ModuleInfo& operator=(ModuleInfo&&);
 };
 
 class ENGINE_EXPORT IEngine : public IModule {

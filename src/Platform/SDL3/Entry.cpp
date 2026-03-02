@@ -1,9 +1,11 @@
 #include <PlatformSDL3Export.h>
 
 #include <Engine/IEngine.hpp>
+#include <Platform/SDL3/Platform.hpp>
 
 using namespace AS::Engine;
 
 extern "C" PLATFORM_SDL3_EXPORT IModule* GetModuleAPI(IEngine* engine) {
-  return 0;
+  Platform::SetEngine(engine);
+  return new Platform;
 }
