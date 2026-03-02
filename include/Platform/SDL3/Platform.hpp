@@ -23,7 +23,7 @@ class Platform : public IPlatform {
   virtual ResultOrError<IMutex*> CreateMutex() override;
 
   virtual void SetCursorCoords(const CursorCoords& coords) override;
-  virtual void SetCursorState(bool hide = false, bool locked = false) override;
+  virtual void SetCursorState(bool hide = false) override;
   virtual CursorCoords GetCursorCoords() override;
 
   virtual ~Platform() = default;

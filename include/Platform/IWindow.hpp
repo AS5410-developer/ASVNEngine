@@ -27,6 +27,8 @@ class ENGINE_EXPORT IWindow {
   virtual bool GetFullscreen() = 0;
   virtual const char* GetTitle() = 0;
 
+  virtual bool IsCreated() = 0;
+
   virtual void Update() = 0;
 
   virtual void Destroy() = 0;

@@ -74,6 +74,7 @@ class ENGINE_EXPORT Engine final : public IEngine {
   IClient* ClientInstance;
   IRender* RenderInstance;
   IPlatform* PlatformInstance;
+  IWindow* MainWindow = 0;
   Console ConsoleInstance;
   ILauncher* LauncherInstance;
 };

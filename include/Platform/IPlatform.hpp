@@ -14,7 +14,7 @@ class ENGINE_EXPORT IPlatform : public IModule {
   virtual ResultOrError<IMutex*> CreateMutex() = 0;
 
   virtual void SetCursorCoords(const CursorCoords& coords) = 0;
-  virtual void SetCursorState(bool hide = false, bool locked = false) = 0;
+  virtual void SetCursorState(bool hide = false) = 0;
   virtual CursorCoords GetCursorCoords() = 0;
 
   virtual ~IPlatform() = default;

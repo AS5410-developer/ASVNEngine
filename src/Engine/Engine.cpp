@@ -47,9 +47,21 @@ void Engine::OnLoaded() {
   tickThread.detach();
   ConsoleInstance << "Current engine's address in process virtual memory: "
                   << this << EndLine;
+
+  auto wind = PlatformInstance->CreateWindow();
+  if (wind.Failed()) {
+    QuitOnError(wind);
+    return;
+  }
+  MainWindow = wind.GetResult();
+  MainWindow->SetSize({600, 600});
+  MainWindow->SetTitle("AS 2D Engine");
+  MainWindow->Initialize();
+  MainWindow->SetFullscreen(true);
 }
 void Engine::OnRegisterOptions() {}
 void Engine::OnUpdate() {
+  if (MainWindow) MainWindow->Update();
   for (uint64_t i = 0; i < Modules.size(); ++i) {
     if (!Modules.contains(i)) continue;
     if (Modules[i].Activated) {
@@ -92,8 +104,14 @@ void Engine::OnTick() {
 void Engine::OnEnabled() {}
 void Engine::OnDisabled() {}
 
-void Engine::Quit() { TickInSecond = -1; }
+void Engine::Quit() {
+  if (MainWindow)
+    if (MainWindow->IsCreated()) MainWindow->Destroy();
+  TickInSecond = -1;
+}
 void Engine::QuitOnError(const IError& error) {
+  if (MainWindow)
+    if (MainWindow->IsCreated()) MainWindow->Destroy();
   std::cerr << "FATAL ENGINE ERROR CALLED: " << error.What() << std::endl;
   Quit();
 }

@@ -2,8 +2,6 @@
 
 using namespace AS::Engine;
 
-Window::Window() { SDL_Init(SDL_INIT_VIDEO); }
-
 void Window::Initialize() {
   window = SDL_CreateWindow(Title, Size.x, Size.y, Flag | SDL_WINDOW_RESIZABLE);
 }
@@ -52,9 +50,10 @@ void Window::Update() {
   }
 }
 
-void Window::Destroy() { SDL_DestroyWindow(window); }
+void Window::Destroy() {
+  if (window) SDL_DestroyWindow(window);
+}
 
 Window::~Window() {
   if (window) Destroy();
-  if (InitializedSDL) SDL_Quit();
 }

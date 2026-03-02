@@ -27,6 +27,8 @@ class Window : public IWindow {
   virtual bool GetFullscreen() override { return Fullscreen; }
   virtual const char* GetTitle() override { return Title; }
 
+  virtual bool IsCreated() override { return window; }
+
   virtual void Update() override;
 
   virtual void Destroy() override;

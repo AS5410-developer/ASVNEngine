@@ -9,8 +9,8 @@ Client::Client() {}
 
 void Client::OnLoaded() {
   EngineInstance->GetConsole() << "Client loaded and started!" << EndLine;
-  std::thread windowThread(&Client::WindowThread, this);
-  windowThread.detach();
+  // std::thread windowThread(&Client::WindowThread, this);
+  // windowThread.detach();
 }
 void Client::OnRegisterOptions() {}
 void Client::OnUpdate() {}
