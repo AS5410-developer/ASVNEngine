@@ -4,12 +4,11 @@
 #include <Base/IError.hpp>
 #include <Base/IModule.hpp>
 #include <Render/IFramebuffer.hpp>
+#include <Render/IImage.hpp>
 #include <Render/IShader.hpp>
 #include <Render/ISprite.hpp>
 
 namespace AS::Engine {
-class ENGINE_EXPORT IShader;
-class ENGINE_EXPORT IImage;
 class ENGINE_EXPORT IRender : public IModule {
  public:
   virtual IError* SetFunctionLoader(void* loader) = 0;
