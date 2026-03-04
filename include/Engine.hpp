@@ -54,6 +54,8 @@ class ENGINE_EXPORT Engine final : public IEngine {
   virtual bool IsServer() const override { return ServerFlag; }
   virtual bool IsSingleplayer() const override { return Singleplayer; }
 
+  virtual IWindow* GetMainWindow() const override { return MainWindow; }
+
   virtual void SetIsSingleplayer(bool newFlag) override {
     Singleplayer = newFlag;
   }

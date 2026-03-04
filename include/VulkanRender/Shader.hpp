@@ -1,20 +1,28 @@
 #ifndef INC_VULKANRENDER_SHADER_HPP
 #define INC_VULKANRENDER_SHADER_HPP
 
-#include <Render/IRender.hpp>
+#include <VulkanRender/Render.hpp>
 
 namespace AS::Engine {
-class Shader : public IShader {
+class EShader : public IShader {
  public:
-  Shader() {}
+  EShader() {}
 
-  virtual void SetShaderData(const void* data,
-                             unsigned long long size) override;
+  virtual void SetShaderData(const char* filename) override;
+  void SetInitData(Device& dev, Swapchain& swapchain) {
+    Dev = dev;
+    Swapch = swapchain;
+  }
+  Shader* GetShader() { return ShaderInstance; }
 
-  virtual void Bind() override;
-  virtual void Unbind() override;
+  virtual ~EShader() {
+    if (ShaderInstance) ShaderInstance->Release();
+  }
 
-  virtual ~Shader() = default;
+ private:
+  Shader* ShaderInstance;
+  Device Dev;
+  Swapchain Swapch;
 };
 }  // namespace AS::Engine
 

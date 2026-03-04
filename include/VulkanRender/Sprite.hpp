@@ -9,12 +9,12 @@ class Sprite : public ISprite {
  public:
   Sprite() {}
 
-  virtual void SetImage(IImage& image);
-  virtual void SetShader(IShader& shader);
+  virtual void SetImage(IImage* image);
+  virtual void SetShader(IShader* shader);
   virtual void SetTransform(Transform& transform);
 
-  virtual IImage& GetImage() const;
-  virtual IShader& GetShader() const;
+  virtual IImage* GetImage() const;
+  virtual IShader* GetShader() const;
   virtual Transform& GetTransform();
 
   virtual void Destroy();

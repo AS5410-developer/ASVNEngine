@@ -17,8 +17,7 @@ struct ShaderVar {
 };
 
 struct Vertex {
-  float pos[3];
-  float color[3];
+  float pos[2];
   float texCoord[2];
 };
 

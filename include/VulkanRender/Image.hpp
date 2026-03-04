@@ -2,7 +2,7 @@
 #define INC_VULKANRENDER_IMAGE_HPP
 
 #include <Base/IError.hpp>
-#include <Render/IRender.hpp>
+#include <VulkanRender/Render.hpp>
 #include <string>
 
 namespace AS::Engine {
@@ -21,7 +21,12 @@ class Image : public IImage {
   virtual void Unload() override;
   virtual void Destroy() override;
 
-  virtual ~Image() = default;
+  void SetInitData(Device& dev) { Dev = dev; }
+
+  virtual ~Image() { Destroy(); }
+
+ private:
+  Device Dev;
 };
 }  // namespace AS::Engine
 
