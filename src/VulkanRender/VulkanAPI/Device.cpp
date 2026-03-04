@@ -2,19 +2,28 @@
 
 Device::Device() {}
 Device::Device(PhysicalDevice pdev, unsigned int queueFamily,
-               vk::raii::SurfaceKHR* surface)
+               VkSurfaceKHR surface)
     : PDev(pdev), CurrentQueueFamily(queueFamily), Surface(surface) {
   Create();
 }
-Device::Device(vk::raii::Device dev) { Dev = std::move(dev); }
+Device::Device(VkDevice dev) { Dev = std::move(dev); }
 
 unsigned int Device::FindPresentQueueID() {
   unsigned int PresentID = CurrentQueueFamily;
-  if (!PDev.GetDevice().getSurfaceSupportKHR(PresentID, **Surface)) {
+  VkBool32 supported = false;
+  vkGetPhysicalDeviceSurfaceSupportKHR(PDev.GetDevice(), CurrentQueueFamily,
+                                       Surface, &supported);
+  if (!supported) {
     PresentIsGraphics = false;
-    auto families = PDev.GetDevice().getQueueFamilyProperties();
+    unsigned int count = 0;
+    vkGetPhysicalDeviceQueueFamilyProperties(PDev.GetDevice(), &count, 0);
+    std::vector<VkQueueFamilyProperties> families(count);
+    vkGetPhysicalDeviceQueueFamilyProperties(PDev.GetDevice(), &count,
+                                             families.data());
     for (int i = 0; i < families.size(); ++i) {
-      if (PDev.GetDevice().getSurfaceSupportKHR(i, **Surface)) {
+      vkGetPhysicalDeviceSurfaceSupportKHR(PDev.GetDevice(), i, Surface,
+                                           &supported);
+      if (supported) {
         PresentID = i;
         break;
       }
@@ -27,40 +36,56 @@ unsigned int Device::GetPresentID() { return PresentID; }
 unsigned int Device::GetGraphicsID() { return CurrentQueueFamily; }
 
 void Device::Create() {
-  vk::DeviceQueueCreateInfo dqInfo{.queueFamilyIndex = CurrentQueueFamily,
-                                   .queueCount = 1,
-                                   .pQueuePriorities = &Priority};
+  VkDeviceQueueCreateInfo dqInfo{
+      .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
+      .pNext = 0,
+      .flags = 0,
+      .queueFamilyIndex = CurrentQueueFamily,
+      .queueCount = 1,
+      .pQueuePriorities = &Priority};
 
   std::vector extensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME,
                             VK_KHR_CREATE_RENDERPASS_2_EXTENSION_NAME,
                             VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME,
                             VK_KHR_SPIRV_1_4_EXTENSION_NAME};
 
-  vk::StructureChain<vk::PhysicalDeviceFeatures2,
-                     vk::PhysicalDeviceVulkan11Features,
-                     vk::PhysicalDeviceVulkan13Features,
-                     vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>
-      features = {{.features = {.samplerAnisotropy = true}},
-                  {.shaderDrawParameters = true},
-                  {.dynamicRendering = true},
-                  {.extendedDynamicState = true}};
+  VkPhysicalDeviceExtendedDynamicStateFeaturesEXT pdedsFeatures{
+      .sType =
+          VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_FEATURES_EXT,
+      .pNext = 0,
+      .extendedDynamicState = true};
 
-  vk::DeviceCreateInfo dcInfo{
-      .pNext = &features.get<vk::PhysicalDeviceFeatures2>(),
-      .queueCreateInfoCount = 1,
-      .pQueueCreateInfos = &dqInfo,
-      .enabledExtensionCount = extensions.size(),
-      .ppEnabledExtensionNames = extensions.data()};
+  VkPhysicalDeviceVulkan13Features pdv13Features{
+      .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES,
+      .pNext = &pdedsFeatures,
+      .dynamicRendering = true};
 
-  vk::raii::PhysicalDevice& dev = PDev.GetDevice();
+  VkPhysicalDeviceVulkan11Features pdv11Features{
+      .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES,
+      .pNext = &pdv13Features,
+      .shaderDrawParameters = true};
 
-  Dev = vk::raii::Device(dev, dcInfo);
+  VkPhysicalDeviceFeatures2 features{
+      .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2_KHR,
+      .pNext = &pdv11Features,
+      .features = {.geometryShader = true, .samplerAnisotropy = true}};
+
+  VkDeviceCreateInfo dcInfo{.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
+                            .flags = 0,
+                            .pNext = &features,
+                            .queueCreateInfoCount = 1,
+                            .pQueueCreateInfos = &dqInfo,
+                            .enabledExtensionCount = extensions.size(),
+                            .ppEnabledExtensionNames = extensions.data()};
+
+  VkPhysicalDevice dev = PDev.GetDevice();
+
+  vkCreateDevice(dev, &dcInfo, 0, &Dev);
   PresentID = FindPresentQueueID();
 
-  Graphics = vk::raii::Queue(Dev, CurrentQueueFamily, 0);
-  Present = vk::raii::Queue(Dev, PresentID, 0);
+  vkGetDeviceQueue(Dev, CurrentQueueFamily, 0, &Graphics);
+  vkGetDeviceQueue(Dev, PresentID, 0, &Present);
 }
-bool Device::IsPresentEqualsGraphics() { return PresentIsGraphics; }
 
 void Device::SetPriority(float priority) {
   if (Dev != nullptr) {
@@ -68,11 +93,7 @@ void Device::SetPriority(float priority) {
   }
   Priority = priority;
 }
-float Device::GetPriority() const { return Priority; }
 
-PhysicalDevice& Device::GetPhysicalDevice() { return PDev; }
-
-vk::raii::Device& Device::GetDevice() { return Dev; }
-vk::raii::Queue& Device::GetPresentQueue() { return Present; }
-vk::raii::Queue& Device::GetGraphicsQueue() { return Graphics; }
-void Device::Release() { Dev.release(); }
+void Device::Release() {
+  if (Dev) vkDestroyDevice(Dev, 0);
+}

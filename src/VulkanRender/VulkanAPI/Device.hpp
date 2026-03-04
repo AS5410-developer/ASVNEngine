@@ -7,33 +7,32 @@
 class Device final {
  public:
   Device();
-  Device(PhysicalDevice pdev, unsigned int queueFamily,
-         vk::raii::SurfaceKHR* surface);
-  Device(vk::raii::Device dev);
+  Device(PhysicalDevice pdev, unsigned int queueFamily, VkSurfaceKHR surface);
+  Device(VkDevice dev);
 
   void Create();
   unsigned int FindPresentQueueID();
-  vk::raii::Device& GetDevice();
-  vk::raii::Queue& GetPresentQueue();
-  vk::raii::Queue& GetGraphicsQueue();
-  PhysicalDevice& GetPhysicalDevice();
+  VkDevice& GetDevice() { return Dev; }
+  VkQueue& GetPresentQueue() { return Present; }
+  VkQueue& GetGraphicsQueue() { return Graphics; }
+  PhysicalDevice& GetPhysicalDevice() { return PDev; }
   void Release();
 
-  unsigned int GetPresentID();
-  unsigned int GetGraphicsID();
+  unsigned int GetPresentID() { return PresentID; }
+  unsigned int GetGraphicsID() { return CurrentQueueFamily; }
 
-  bool IsPresentEqualsGraphics();
+  bool IsPresentEqualsGraphics() { return PresentIsGraphics; }
 
   void SetPriority(float priority);
-  float GetPriority() const;
+  float GetPriority() const { return Priority; }
 
   virtual ~Device() = default;
 
  private:
-  vk::raii::Device Dev = nullptr;
-  vk::raii::Queue Present = nullptr;
-  vk::raii::Queue Graphics = nullptr;
-  vk::raii::SurfaceKHR* Surface = nullptr;
+  VkDevice Dev = nullptr;
+  VkQueue Present = nullptr;
+  VkQueue Graphics = nullptr;
+  VkSurfaceKHR Surface = nullptr;
   unsigned int CurrentQueueFamily = 0;
   unsigned int PresentID = 0;
   PhysicalDevice PDev;
