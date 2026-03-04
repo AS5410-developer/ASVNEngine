@@ -1,62 +1,52 @@
 #ifndef REF_COMMAND_BUFFER_HPP
 #define REF_COMMAND_BUFFER_HPP
-#include "Vulkan.hpp"
-#include "Device.hpp"
 #include "CommandPool.hpp"
+#include "Device.hpp"
 #include "Swapchain.hpp"
 #include "VertexBuffer.hpp"
+#include "Vulkan.hpp"
 
-class CommandBuffer final
-{
-public:
-	CommandBuffer( );
-	CommandBuffer( CommandPool *pool, Swapchain *swapchain );
-	CommandBuffer( vk::raii::CommandBuffer cb );
+class CommandBuffer final {
+ public:
+  CommandBuffer() {}
+  CommandBuffer(CommandPool& pool, Swapchain& swapchain);
+  CommandBuffer(VkCommandBuffer cb) : Buffer(cb) {}
 
-	vk::raii::CommandBuffer &GetBuffer( );
+  VkCommandBuffer& GetBuffer() { return Buffer; }
 
-	void WaitDeviceIdle( );
+  void WaitDeviceIdle();
 
-	void StartDraw( vk::ImageView &depthBuffer, vk::Image &depthImg );
-	void SetCurrentShader( Shader &shader );
-	template <typename T>
-	void PushConstant( T &data )
-	{
-		Buffer.pushConstants<T>(
-			*CurrentShader->GetPipelineLayout( ),
-			vk::ShaderStageFlagBits::eVertex,
-			0,
-			data
-		);
-	}
-	vk::raii::CommandBuffer StartSTCommands( );
-	void EndSTCommands( vk::raii::CommandBuffer &buffer );
-	void DrawVertexNotIndexedBuffer( VertexBuffer &buffer );
-	void EndDraw( );
-	void TransitionImageLayout( vk::raii::CommandBuffer &buffer,
-		vk::PipelineStageFlags srcStageMask,
-		vk::PipelineStageFlags dstStageMask,
-		vk::AccessFlags srcAccessMask,
-		vk::AccessFlags dstAccessMask,
-		vk::ImageLayout oldLayout,
-		vk::ImageLayout newLayout,
-		vk::Image image,
-		vk::ImageAspectFlags aspect = vk::ImageAspectFlagBits::eColor );
+  void StartDraw();
+  void SetCurrentShader(Shader& shader);
+  template <typename T>
+  void PushConstant(T& data) {
+    vkCmdPushConstants(Buffer, *CurrentShader->GetPipelineLayout(),
+                       VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(T), &data);
+  }
+  VkCommandBuffer StartSTCommands();
+  void EndSTCommands(VkCommandBuffer& buffer);
+  void DrawVertexNotIndexedBuffer(VertexBuffer& buffer);
+  void EndDraw();
+  void TransitionImageLayout(
+      VkCommandBuffer& buffer, VkPipelineStageFlags srcStageMask,
+      VkPipelineStageFlags dstStageMask, VkAccessFlags srcAccessMask,
+      VkAccessFlags dstAccessMask, VkImageLayout oldLayout,
+      VkImageLayout newLayout, VkImage image,
+      VkImageAspectFlags aspect = VK_IMAGE_ASPECT_COLOR_BIT);
 
-	virtual ~CommandBuffer( ) = default;
-private:
+  virtual ~CommandBuffer() = default;
 
+ private:
+  VkCommandBuffer Buffer = nullptr;
+  CommandPool Pool;
+  Swapchain Swapch;
 
-	vk::raii::CommandBuffer Buffer = nullptr;
-	CommandPool *Pool;
-	Swapchain *Swapch;
+  unsigned int SwapchID = 0;
 
-	unsigned int SwapchID = 0;
-
-	vk::raii::Semaphore Present = nullptr;
-	vk::raii::Semaphore Render = nullptr;
-	vk::raii::Fence Draw = nullptr;
-	Shader *CurrentShader;
+  VkSemaphore Present = nullptr;
+  VkSemaphore Render = nullptr;
+  VkFence Draw = nullptr;
+  Shader* CurrentShader;
 };
 
 #endif

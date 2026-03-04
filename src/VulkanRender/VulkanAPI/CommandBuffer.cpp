@@ -1,161 +1,150 @@
 #include "CommandBuffer.hpp"
 
-CommandBuffer::CommandBuffer() {}
-CommandBuffer::CommandBuffer(CommandPool* pool, Swapchain* swapchain)
+CommandBuffer::CommandBuffer(CommandPool& pool, Swapchain& swapchain)
     : Swapch(swapchain), Pool(pool) {
-  vk::CommandBufferAllocateInfo cbaInfo{
-      .commandPool = **pool,
-      .level = vk::CommandBufferLevel::ePrimary,
+  VkCommandBufferAllocateInfo cbaInfo{
+      .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+      .pNext = 0,
+      .commandPool = *pool,
+      .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
       .commandBufferCount = 1};
-  Buffer = std::move(
-      vk::raii::CommandBuffers(pool->GetDevice()->GetDevice(), cbaInfo)
-          .front());
+  vkAllocateCommandBuffers(Pool.GetDevice().GetDevice(), &cbaInfo, &Buffer);
 
-  Present = vk::raii::Semaphore(pool->GetDevice()->GetDevice(),
-                                vk::SemaphoreCreateInfo{});
-  Render = vk::raii::Semaphore(pool->GetDevice()->GetDevice(),
-                               vk::SemaphoreCreateInfo{});
-  Draw = vk::raii::Fence(pool->GetDevice()->GetDevice(),
-                         {.flags = vk::FenceCreateFlagBits::eSignaled});
+  VkFenceCreateInfo fcInfo{.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
+                           .pNext = 0,
+                           .flags = VK_FENCE_CREATE_SIGNALED_BIT};
+
+  vkCreateSemaphore(Pool.GetDevice().GetDevice(), 0, 0, &Present);
+  vkCreateSemaphore(Pool.GetDevice().GetDevice(), 0, 0, &Render);
+  vkCreateFence(Pool.GetDevice().GetDevice(), &fcInfo, 0, &Draw);
 }
-CommandBuffer::CommandBuffer(vk::raii::CommandBuffer cb)
-    : Buffer(std::move(cb)) {}
-
-vk::raii::CommandBuffer& CommandBuffer::GetBuffer() { return Buffer; }
 
 void CommandBuffer::WaitDeviceIdle() {
-  Pool->GetDevice()->GetDevice().waitIdle();
+  vkDeviceWaitIdle(Pool.GetDevice().GetDevice());
 }
 
-void CommandBuffer::StartDraw(vk::ImageView& depthBuffer, vk::Image& depthImg) {
-  Pool->GetDevice()->GetDevice().waitForFences(*Draw, vk::True, UINT64_MAX);
+void CommandBuffer::StartDraw() {
+  vkWaitForFences(Pool.GetDevice().GetDevice(), 1, &Draw, VK_TRUE, UINT64_MAX);
 
-  if (*Present == VK_NULL_HANDLE) {
+  if (Present == VK_NULL_HANDLE) {
     return;
   }
 
-  SwapchID = Swapch->NextImage(Present);
-  Buffer.begin({});
+  SwapchID = Swapch.NextImage(Present);
+
+  VkCommandBufferBeginInfo cbbInfo{
+      .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+      .pNext = 0,
+      .flags = 0};
+  vkBeginCommandBuffer(Buffer, &cbbInfo);
 
   TransitionImageLayout(
-      Buffer, vk::PipelineStageFlagBits::eColorAttachmentOutput,
-      vk::PipelineStageFlagBits::eColorAttachmentOutput, {},
-      vk::AccessFlagBits::eColorAttachmentWrite, vk::ImageLayout::eUndefined,
-      vk::ImageLayout::eColorAttachmentOptimal, Swapch->GetImage(SwapchID));
-  TransitionImageLayout(Buffer,
-                        vk::PipelineStageFlagBits::eEarlyFragmentTests |
-                            vk::PipelineStageFlagBits::eLateFragmentTests,
-                        vk::PipelineStageFlagBits::eEarlyFragmentTests |
-                            vk::PipelineStageFlagBits::eLateFragmentTests,
-                        vk::AccessFlagBits::eDepthStencilAttachmentWrite,
-                        vk::AccessFlagBits::eDepthStencilAttachmentWrite,
-                        vk::ImageLayout::eUndefined,
-                        vk::ImageLayout::eDepthAttachmentOptimal, depthImg,
-                        vk::ImageAspectFlagBits::eDepth);
-  vk::RenderingAttachmentInfo raInfo{
-      .imageView = Swapch->GetImageView(SwapchID),
-      .imageLayout = vk::ImageLayout::eColorAttachmentOptimal,
-      .loadOp = vk::AttachmentLoadOp::eClear,
-      .storeOp = vk::AttachmentStoreOp::eStore,
-      .clearValue = vk::ClearColorValue{0.0f, 0.0f, 0.0f, 1.0f}};
-  vk::RenderingAttachmentInfo radInfo = {
-      .imageView = depthBuffer,
-      .imageLayout = vk::ImageLayout::eDepthAttachmentOptimal,
-      .loadOp = vk::AttachmentLoadOp::eClear,
-      .storeOp = vk::AttachmentStoreOp::eDontCare,
-      .clearValue = vk::ClearDepthStencilValue{1.0f, 0}};
-  vk::RenderingInfo rInfo{
-      .renderArea = {.offset = {0, 0}, .extent = Swapch->GetSize()},
+      Buffer, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+      VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, {},
+      VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, VK_IMAGE_LAYOUT_UNDEFINED,
+      VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, Swapch.GetImage(SwapchID));
+  VkRenderingAttachmentInfo raInfo{
+      .imageView = Swapch.GetImageView(SwapchID),
+      .imageLayout = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL,
+      .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
+      .storeOp = VK_ATTACHMENT_STORE_OP_STORE,
+      .clearValue = VkClearColorValue{0.0f, 0.0f, 0.0f, 1.0f}};
+
+  VkRenderingInfo rInfo{
+      .renderArea = {.offset = {0, 0}, .extent = Swapch.GetSize()},
       .layerCount = 1,
       .colorAttachmentCount = 1,
-      .pColorAttachments = &raInfo,
-      .pDepthAttachment = &radInfo};
-  Buffer.beginRendering(rInfo);
-  Buffer.setViewport(
-      0, vk::Viewport{0.0f, static_cast<float>(Swapch->GetSize().height),
-                      static_cast<float>(Swapch->GetSize().width),
-                      static_cast<float>(-(int32_t)(Swapch->GetSize().height)),
-                      0.0f, 1.0f});
-  Buffer.setScissor(0, vk::Rect2D{vk::Offset2D{0, 0}, Swapch->GetSize()});
+      .pColorAttachments = &raInfo};
+  vkCmdBeginRendering(Buffer, &rInfo);
+
+  VkViewport viewport{
+      .x = 0.0f,
+      .y = static_cast<float>(Swapch.GetSize().height),
+      .width = static_cast<float>(Swapch.GetSize().width),
+      .height = static_cast<float>(-(int32_t)(Swapch.GetSize().height)),
+      .minDepth = 0.0f,
+      .maxDepth = 1.0f,
+  };
+  vkCmdSetViewport(Buffer, 0, 1, &viewport);
+
+  VkRect2D scissor = {VkOffset2D{0, 0}, Swapch.GetSize()};
+  vkCmdSetScissor(Buffer, 0, 1, &scissor);
 }
 void CommandBuffer::SetCurrentShader(Shader& shader) {
   CurrentShader = &shader;
-  Buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, shader.GetPipeline());
+  vkCmdBindPipeline(Buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                    *CurrentShader->GetPipeline());
 }
-void CommandBuffer::DrawVertexNotIndexedBuffer(VertexBuffer& buffer) {
-  Buffer.bindVertexBuffers(0, *buffer.GetBuffer(), {0});
-  Buffer.draw(buffer.GetVertexCount(), 1, 0, 0);
-}
+void CommandBuffer::DrawVertexNotIndexedBuffer(VertexBuffer& buffer) {}
 void CommandBuffer::EndDraw() {
-  Buffer.endRendering();
-  TransitionImageLayout(
-      Buffer, vk::PipelineStageFlagBits::eColorAttachmentOutput,
-      vk::PipelineStageFlagBits::eBottomOfPipe,
-      vk::AccessFlagBits::eColorAttachmentWrite, {},
-      vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::ePresentSrcKHR,
-      Swapch->GetImage(SwapchID));
-  Buffer.end();
+  vkCmdEndRendering(Buffer);
+  TransitionImageLayout(Buffer, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+                        VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+                        VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, {},
+                        VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+                        VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+                        Swapch.GetImage(SwapchID));
+  vkEndCommandBuffer(Buffer);
 
-  Pool->GetDevice()->GetDevice().resetFences(*Draw);
-  vk::PipelineStageFlags waitDestinationStageMask(
-      vk::PipelineStageFlagBits::eColorAttachmentOutput);
-  const vk::SubmitInfo submitInfo{
-      .waitSemaphoreCount = 1,
-      .pWaitSemaphores = &*Present,
-      .pWaitDstStageMask = &waitDestinationStageMask,
-      .commandBufferCount = 1,
-      .pCommandBuffers = &*Buffer,
-      .signalSemaphoreCount = 1,
-      .pSignalSemaphores = &*Render};
-  Pool->GetDevice()->GetGraphicsQueue().submit(submitInfo, *Draw);
+  vkResetFences(Pool.GetDevice().GetDevice(), 1, &Draw);
+  VkPipelineStageFlags waitDestinationStageMask =
+      VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+  const VkSubmitInfo submitInfo{.waitSemaphoreCount = 1,
+                                .pWaitSemaphores = &Present,
+                                .pWaitDstStageMask = &waitDestinationStageMask,
+                                .commandBufferCount = 1,
+                                .pCommandBuffers = &Buffer,
+                                .signalSemaphoreCount = 1,
+                                .pSignalSemaphores = &Render};
+  vkQueueSubmit(Pool.GetDevice().GetGraphicsQueue(), 1, &submitInfo, Draw);
 
-  const vk::PresentInfoKHR presentInfoKHR{
-      .waitSemaphoreCount = 1,
-      .pWaitSemaphores = &*Render,
-      .swapchainCount = 1,
-      .pSwapchains = &*Swapch->GetSwapchain(),
-      .pImageIndices = &SwapchID};
-  Pool->GetDevice()->GetPresentQueue().presentKHR(presentInfoKHR);
+  const VkPresentInfoKHR presentInfoKHR{.waitSemaphoreCount = 1,
+                                        .pWaitSemaphores = &Render,
+                                        .swapchainCount = 1,
+                                        .pSwapchains = &Swapch.GetSwapchain(),
+                                        .pImageIndices = &SwapchID};
+  vkQueuePresentKHR(Pool.GetDevice().GetPresentQueue(), &presentInfoKHR);
 }
 void CommandBuffer::TransitionImageLayout(
-    vk::raii::CommandBuffer& buffer, vk::PipelineStageFlags srcStageMask,
-    vk::PipelineStageFlags dstStageMask, vk::AccessFlags srcAccessMask,
-    vk::AccessFlags dstAccessMask, vk::ImageLayout oldLayout,
-    vk::ImageLayout newLayout, vk::Image image, vk::ImageAspectFlags aspect) {
-  vk::ImageMemoryBarrier mb{.srcAccessMask = srcAccessMask,
-                            .dstAccessMask = dstAccessMask,
-                            .oldLayout = oldLayout,
-                            .newLayout = newLayout,
-                            .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-                            .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-                            .image = image,
-                            .subresourceRange = {.aspectMask = aspect,
-                                                 .baseMipLevel = 0,
-                                                 .levelCount = 1,
-                                                 .baseArrayLayer = 0,
-                                                 .layerCount = 1}};
-  buffer.pipelineBarrier(srcStageMask, dstStageMask, {}, nullptr, nullptr, mb);
+    VkCommandBuffer& buffer, VkPipelineStageFlags srcStageMask,
+    VkPipelineStageFlags dstStageMask, VkAccessFlags srcAccessMask,
+    VkAccessFlags dstAccessMask, VkImageLayout oldLayout,
+    VkImageLayout newLayout, VkImage image, VkImageAspectFlags aspect) {
+  VkImageMemoryBarrier mb{.srcAccessMask = srcAccessMask,
+                          .dstAccessMask = dstAccessMask,
+                          .oldLayout = oldLayout,
+                          .newLayout = newLayout,
+                          .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+                          .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+                          .image = image,
+                          .subresourceRange = {.aspectMask = aspect,
+                                               .baseMipLevel = 0,
+                                               .levelCount = 1,
+                                               .baseArrayLayer = 0,
+                                               .layerCount = 1}};
+  vkCmdPipelineBarrier(buffer, srcStageMask, dstStageMask, {}, 0, nullptr, 0,
+                       nullptr, 1, &mb);
 }
 
-vk::raii::CommandBuffer CommandBuffer::StartSTCommands() {
-  vk::CommandBufferAllocateInfo allocInfo{
-      .commandPool = **Pool,
-      .level = vk::CommandBufferLevel::ePrimary,
-      .commandBufferCount = 1};
-  vk::raii::CommandBuffer buffer = std::move(
-      Pool->GetDevice()->GetDevice().allocateCommandBuffers(allocInfo).front());
+VkCommandBuffer CommandBuffer::StartSTCommands() {
+  VkCommandBuffer buffer = 0;
+  VkCommandBufferAllocateInfo cbaInfo{.commandPool = *Pool,
+                                      .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+                                      .commandBufferCount = 1};
+  vkAllocateCommandBuffers(Pool.GetDevice().GetDevice(), &cbaInfo, &buffer);
 
-  vk::CommandBufferBeginInfo beginInfo{
-      .flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit};
-  buffer.begin(beginInfo);
+  VkCommandBufferBeginInfo cbbInfo{
+      .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+      .pNext = 0,
+      .flags = 0};
+  vkBeginCommandBuffer(buffer, &cbbInfo);
 
   return buffer;
 }
-void CommandBuffer::EndSTCommands(vk::raii::CommandBuffer& buffer) {
-  buffer.end();
+void CommandBuffer::EndSTCommands(VkCommandBuffer& buffer) {
+  vkEndCommandBuffer(buffer);
 
-  vk::SubmitInfo submitInfo{.commandBufferCount = 1,
-                            .pCommandBuffers = &*buffer};
-  Pool->GetDevice()->GetGraphicsQueue().submit(submitInfo, nullptr);
-  Pool->GetDevice()->GetGraphicsQueue().waitIdle();
+  VkSubmitInfo submitInfo{.commandBufferCount = 1, .pCommandBuffers = &buffer};
+  vkQueueSubmit(Pool.GetDevice().GetGraphicsQueue(), 1, &submitInfo, nullptr);
+  vkQueueWaitIdle(Pool.GetDevice().GetGraphicsQueue());
 }
