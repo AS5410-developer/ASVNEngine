@@ -24,38 +24,37 @@ struct Vertex {
 
 class Shader {
  public:
-  Shader();
-  Shader(Device* dev, Swapchain* swapchain, const char* filename,
-         bool enableDepthTest = true,
-         vk::CullModeFlags cullMode = vk::CullModeFlagBits::eBack);
+  Shader() {}
+  Shader(Device dev, Swapchain swapchain, const char* filename,
+         VkCullModeFlags cullMode = VK_CULL_MODE_BACK_BIT);
 
-  void SetCullMode(vk::CullModeFlags cullMode);
-  vk::CullModeFlags GetCullMode();
+  void SetCullMode(VkCullModeFlags cullMode) { CullMode = cullMode; }
+  VkCullModeFlags GetCullMode() { return CullMode; }
 
-  void SetBlending(bool enabled);
-  bool GetBlending();
+  void SetBlending(bool enabled) { Blending = enabled; }
+  bool GetBlending() { return Blending; }
 
-  void DrawGeometry(const Vertex* vertex);
-
-  vk::raii::Pipeline& GetPipeline();
-  vk::raii::PipelineLayout& GetPipelineLayout();
-  vk::raii::DescriptorSetLayout& GetDescriptorSetLayout();
+  VkPipeline& GetPipeline() { return Pipeline; }
+  VkPipelineLayout& GetPipelineLayout() { return PipelineLayout; }
+  VkDescriptorSetLayout& GetDescriptorSetLayout() {
+    return DescriptorSetLayout;
+  }
 
   void RebuildPipeline();
+  void Release();
 
   virtual ~Shader() = default;
 
  private:
-  vk::raii::Pipeline Pipeline = nullptr;
-  vk::raii::PipelineLayout PipelineLayout = nullptr;
-  vk::raii::ShaderModule Module = nullptr;
-  vk::raii::DescriptorSetLayout DescriptorSetLayout = nullptr;
-  vk::ShaderModuleCreateInfo ShaderModuleInfo;
-  vk::CullModeFlags CullMode = vk::CullModeFlagBits::eBack;
+  VkPipeline Pipeline = nullptr;
+  VkPipelineLayout PipelineLayout = nullptr;
+  VkShaderModule Module = nullptr;
+  VkDescriptorSetLayout DescriptorSetLayout = nullptr;
+  VkShaderModuleCreateInfo ShaderModuleInfo;
+  VkCullModeFlags CullMode = VK_CULL_MODE_BACK_BIT;
   bool Blending = false;
-  bool EnableDepthTest = true;
-  Swapchain* Swapch = 0;
-  Device* Dev = 0;
+  Swapchain Swapch = 0;
+  Device Dev = 0;
 };
 
 #endif

@@ -34,6 +34,8 @@ class CommandBuffer final {
       VkImageLayout newLayout, VkImage image,
       VkImageAspectFlags aspect = VK_IMAGE_ASPECT_COLOR_BIT);
 
+  void Release();
+
   virtual ~CommandBuffer() = default;
 
  private:

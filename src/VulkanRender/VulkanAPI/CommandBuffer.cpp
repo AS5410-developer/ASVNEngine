@@ -44,6 +44,8 @@ void CommandBuffer::StartDraw() {
       VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, VK_IMAGE_LAYOUT_UNDEFINED,
       VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, Swapch.GetImage(SwapchID));
   VkRenderingAttachmentInfo raInfo{
+      .sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
+      .pNext = 0,
       .imageView = Swapch.GetImageView(SwapchID),
       .imageLayout = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL,
       .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
@@ -51,6 +53,9 @@ void CommandBuffer::StartDraw() {
       .clearValue = VkClearColorValue{0.0f, 0.0f, 0.0f, 1.0f}};
 
   VkRenderingInfo rInfo{
+      .sType = VK_STRUCTURE_TYPE_RENDERING_INFO,
+      .pNext = 0,
+      .flags = 0,
       .renderArea = {.offset = {0, 0}, .extent = Swapch.GetSize()},
       .layerCount = 1,
       .colorAttachmentCount = 1,
@@ -73,7 +78,7 @@ void CommandBuffer::StartDraw() {
 void CommandBuffer::SetCurrentShader(Shader& shader) {
   CurrentShader = &shader;
   vkCmdBindPipeline(Buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                    *CurrentShader->GetPipeline());
+                    CurrentShader->GetPipeline());
 }
 void CommandBuffer::DrawVertexNotIndexedBuffer(VertexBuffer& buffer) {}
 void CommandBuffer::EndDraw() {
@@ -89,7 +94,9 @@ void CommandBuffer::EndDraw() {
   vkResetFences(Pool.GetDevice().GetDevice(), 1, &Draw);
   VkPipelineStageFlags waitDestinationStageMask =
       VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-  const VkSubmitInfo submitInfo{.waitSemaphoreCount = 1,
+  const VkSubmitInfo submitInfo{.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+                                .pNext = 0,
+                                .waitSemaphoreCount = 1,
                                 .pWaitSemaphores = &Present,
                                 .pWaitDstStageMask = &waitDestinationStageMask,
                                 .commandBufferCount = 1,
@@ -110,7 +117,9 @@ void CommandBuffer::TransitionImageLayout(
     VkPipelineStageFlags dstStageMask, VkAccessFlags srcAccessMask,
     VkAccessFlags dstAccessMask, VkImageLayout oldLayout,
     VkImageLayout newLayout, VkImage image, VkImageAspectFlags aspect) {
-  VkImageMemoryBarrier mb{.srcAccessMask = srcAccessMask,
+  VkImageMemoryBarrier mb{.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+                          .pNext = 0,
+                          .srcAccessMask = srcAccessMask,
                           .dstAccessMask = dstAccessMask,
                           .oldLayout = oldLayout,
                           .newLayout = newLayout,
@@ -128,9 +137,12 @@ void CommandBuffer::TransitionImageLayout(
 
 VkCommandBuffer CommandBuffer::StartSTCommands() {
   VkCommandBuffer buffer = 0;
-  VkCommandBufferAllocateInfo cbaInfo{.commandPool = *Pool,
-                                      .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
-                                      .commandBufferCount = 1};
+  VkCommandBufferAllocateInfo cbaInfo{
+      .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+      .pNext = 0,
+      .commandPool = *Pool,
+      .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+      .commandBufferCount = 1};
   vkAllocateCommandBuffers(Pool.GetDevice().GetDevice(), &cbaInfo, &buffer);
 
   VkCommandBufferBeginInfo cbbInfo{
@@ -144,7 +156,16 @@ VkCommandBuffer CommandBuffer::StartSTCommands() {
 void CommandBuffer::EndSTCommands(VkCommandBuffer& buffer) {
   vkEndCommandBuffer(buffer);
 
-  VkSubmitInfo submitInfo{.commandBufferCount = 1, .pCommandBuffers = &buffer};
+  VkSubmitInfo submitInfo{.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+                          .pNext = 0,
+                          .commandBufferCount = 1,
+                          .pCommandBuffers = &buffer};
   vkQueueSubmit(Pool.GetDevice().GetGraphicsQueue(), 1, &submitInfo, nullptr);
   vkQueueWaitIdle(Pool.GetDevice().GetGraphicsQueue());
+}
+void CommandBuffer::Release() {
+  vkDestroySemaphore(Pool.GetDevice().GetDevice(), Present, 0);
+  vkDestroySemaphore(Pool.GetDevice().GetDevice(), Render, 0);
+  vkDestroyFence(Pool.GetDevice().GetDevice(), Draw, 0);
+  vkFreeCommandBuffers(Pool.GetDevice().GetDevice(), *Pool, 1, &Buffer);
 }

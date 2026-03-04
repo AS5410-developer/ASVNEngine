@@ -1,190 +1,203 @@
 #include "Shader.hpp"
 
-#include "Depth.hpp"
+#include <fstream>
 
-extern Depth* MainDepth;
-
-Shader::Shader() {}
-Shader::Shader(Device* dev, Swapchain* swapchain, const char* filename,
-               bool enableDepthTest, vk::CullModeFlags cullMode)
-    : Dev(dev),
-      Swapch(swapchain),
-      EnableDepthTest(enableDepthTest),
-      CullMode(cullMode) {
-  auto fs = Engine::GetInstance().GetEngineFuncs()->fsapi;
-
-  auto shader = new std::string(fs->Gamedir());
-  const char* path =
-      shader->append("/").append(SHADER_MOD_LOCATION).append(filename).c_str();
-
-  if (!fs->SysFileExists(path)) {
-    return;
-  }
-
-  auto ShaderFile = fs->Open(path, "rb", false);
-
-  if (!ShaderFile) {
-    return;
-  }
-  fs->Seek(ShaderFile, 0, SEEK_END);
-  const size_t Size = fs->Tell(ShaderFile);
-  if (Size == -1) {
-    return;
-  }
-
+Shader::Shader(Device dev, Swapchain swapchain, const char* filename,
+               VkCullModeFlags cullMode)
+    : Dev(dev), Swapch(swapchain), CullMode(cullMode) {
+  std::ifstream file(SHADER_MOD_LOCATION + std::string(filename),
+                     std::ios::ate | std::ios::binary);
+  if (!file.is_open()) return;
+  unsigned int Size = file.tellg();
   char* Data = new char[Size];
+  file.seekg(0);
+  file.read(Data, Size);
+  file.close();
+  if (!Data) return;
 
-  fs->Seek(ShaderFile, 0, 0);
-
-  fs->Read(ShaderFile, Data, Size);
-
-  fs->Close(ShaderFile);
-
-  delete path;
-
-  auto shaderModuleInfo = vk::ShaderModuleCreateInfo{
-      .codeSize = Size, .pCode = reinterpret_cast<uint32_t*>(Data)};
+  auto shaderModuleInfo = VkShaderModuleCreateInfo{
+      .sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
+      .pNext = 0,
+      .codeSize = Size,
+      .pCode = reinterpret_cast<uint32_t*>(Data)};
   ShaderModuleInfo = shaderModuleInfo;
-  Module = vk::raii::ShaderModule{Dev->GetDevice(), ShaderModuleInfo};
+  vkCreateShaderModule(Dev.GetDevice(), &ShaderModuleInfo, 0, &Module);
 
   RebuildPipeline();
 }
 
-vk::raii::Pipeline& Shader::GetPipeline() { return Pipeline; }
-void Shader::SetCullMode(vk::CullModeFlags cullMode) { CullMode = cullMode; }
-vk::CullModeFlags Shader::GetCullMode() { return CullMode; }
-void Shader::SetBlending(bool enabled) { Blending = enabled; }
-bool Shader::GetBlending() { return Blending; }
-
 void Shader::RebuildPipeline() {
-  vk::PipelineShaderStageCreateInfo psscVInfo{
-      .stage = vk::ShaderStageFlagBits::eVertex,
+  VkPipelineShaderStageCreateInfo psscVInfo{
+      .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+      .pNext = 0,
+      .flags = 0,
+      .stage = VK_SHADER_STAGE_VERTEX_BIT,
       .module = Module,
       .pName = "VertexMain"};
-  vk::PipelineShaderStageCreateInfo psscFInfo{
-      .stage = vk::ShaderStageFlagBits::eFragment,
+  VkPipelineShaderStageCreateInfo psscFInfo{
+      .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+      .pNext = 0,
+      .flags = 0,
+      .stage = VK_SHADER_STAGE_FRAGMENT_BIT,
       .module = Module,
       .pName = "FragmentMain"};
-  vk::PipelineShaderStageCreateInfo psscInfo[] = {psscVInfo, psscFInfo};
+  VkPipelineShaderStageCreateInfo psscInfo[] = {psscVInfo, psscFInfo};
 
-  vk::VertexInputBindingDescription vibDesc{
+  VkVertexInputBindingDescription vibDesc{
       .binding = 0,
       .stride = sizeof(Vertex),
-      .inputRate = vk::VertexInputRate::eVertex};
-  vk::VertexInputAttributeDescription viaDesc[] = {
+      .inputRate = VK_VERTEX_INPUT_RATE_VERTEX};
+  VkVertexInputAttributeDescription viaDesc[] = {
       {.location = 0,
        .binding = 0,
-       .format = vk::Format::eR32G32B32Sfloat,
+       .format = VK_FORMAT_R32G32B32_SFLOAT,
        .offset = offsetof(Vertex, pos)},
       {.location = 1,
        .binding = 0,
-       .format = vk::Format::eR32G32B32Sfloat,
-       .offset = offsetof(Vertex, color)},
-      {.location = 2,
-       .binding = 0,
-       .format = vk::Format::eR32G32Sfloat,
+       .format = VK_FORMAT_R32G32_SFLOAT,
        .offset = offsetof(Vertex, texCoord)}};
 
-  vk::PipelineDepthStencilStateCreateInfo pdsdcInfo{
-      .depthTestEnable = vk::True,
-      .depthWriteEnable = vk::True,
-      .depthCompareOp = vk::CompareOp::eLess,
-      .depthBoundsTestEnable = vk::False,
-      .stencilTestEnable = vk::False};
-  if (!EnableDepthTest) pdsdcInfo.depthTestEnable = vk::False;
+  VkPipelineDepthStencilStateCreateInfo pdsdcInfo{
+      .sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
+      .pNext = 0,
+      .flags = 0,
+      .depthTestEnable = VK_FALSE};
 
-  vk::PipelineVertexInputStateCreateInfo pviscInfo{
+  VkPipelineVertexInputStateCreateInfo pviscInfo{
+      .sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
+      .pNext = 0,
+      .flags = 0,
       .vertexBindingDescriptionCount = 1,
       .pVertexBindingDescriptions = &vibDesc,
       .vertexAttributeDescriptionCount = 3,
       .pVertexAttributeDescriptions = viaDesc};
-  vk::PipelineInputAssemblyStateCreateInfo piascInfo{
-      .topology = vk::PrimitiveTopology::eTriangleList};
-  vk::PipelineViewportStateCreateInfo pvscInfo{.flags = {},
-                                               .viewportCount = 1,
-                                               .pViewports = {},
-                                               .scissorCount = 1,
-                                               .pScissors = {}};
-  vk::PipelineRasterizationStateCreateInfo prscInfo{
-      .depthClampEnable = vk::False,
-      .rasterizerDiscardEnable = vk::False,
+  VkPipelineInputAssemblyStateCreateInfo piascInfo{
+      .sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
+      .pNext = 0,
+      .flags = 0,
+      .topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST};
+  VkPipelineViewportStateCreateInfo pvscInfo{
+      .sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
+      .pNext = 0,
+      .flags = 0,
+      .viewportCount = 1,
+      .pViewports = {},
+      .scissorCount = 1,
+      .pScissors = {}};
+  VkPipelineRasterizationStateCreateInfo prscInfo{
+      .sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
+      .pNext = 0,
+      .flags = 0,
+      .depthClampEnable = VK_FALSE,
+      .rasterizerDiscardEnable = VK_FALSE,
       .cullMode = CullMode,
-      .frontFace = vk::FrontFace::eCounterClockwise,
-      .depthBiasEnable = vk::False,
+      .frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE,
+      .depthBiasEnable = VK_FALSE,
       .depthBiasConstantFactor = 0.0f,
       .depthBiasClamp = 0.0f,
       .depthBiasSlopeFactor = 0.0f,
       .lineWidth = 1.0f};
-  vk::PipelineMultisampleStateCreateInfo pmscInfo{
-      .rasterizationSamples = vk::SampleCountFlagBits::e1,
-      .sampleShadingEnable = vk::False};
-  vk::PipelineColorBlendAttachmentState pcbaState{
-      .blendEnable = vk::False,
-      .colorWriteMask =
-          vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG |
-          vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA};
+  VkPipelineMultisampleStateCreateInfo pmscInfo{
+      .sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO,
+      .pNext = 0,
+      .flags = 0,
+      .rasterizationSamples = VK_SAMPLE_COUNT_1_BIT,
+      .sampleShadingEnable = VK_FALSE};
+  VkPipelineColorBlendAttachmentState pcbaState{
+      .blendEnable = VK_FALSE,
+      .colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
+                        VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT};
   if (Blending) {
-    pcbaState.blendEnable = vk::True;
-    pcbaState.srcColorBlendFactor = vk::BlendFactor::eSrcAlpha;
-    pcbaState.dstColorBlendFactor = vk::BlendFactor::eOneMinusSrcAlpha;
-    pcbaState.colorBlendOp = vk::BlendOp::eAdd;
-    pcbaState.srcAlphaBlendFactor = vk::BlendFactor::eOne;
-    pcbaState.dstAlphaBlendFactor = vk::BlendFactor::eZero;
-    pcbaState.alphaBlendOp = vk::BlendOp::eAdd;
+    pcbaState.blendEnable = VK_TRUE;
+    pcbaState.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+    pcbaState.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+    pcbaState.colorBlendOp = VK_BLEND_OP_ADD;
+    pcbaState.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+    pcbaState.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+    pcbaState.alphaBlendOp = VK_BLEND_OP_ADD;
   }
-  vk::PipelineColorBlendStateCreateInfo pcbscInfo{.logicOpEnable = vk::False,
-                                                  .logicOp = vk::LogicOp::eCopy,
-                                                  .attachmentCount = 1,
-                                                  .pAttachments = &pcbaState};
+  VkPipelineColorBlendStateCreateInfo pcbscInfo{
+      .sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
+      .pNext = 0,
+      .flags = 0,
+      .logicOpEnable = VK_FALSE,
+      .logicOp = VK_LOGIC_OP_COPY,
+      .attachmentCount = 1,
+      .pAttachments = &pcbaState};
 
-  std::vector dynamicStates{vk::DynamicState::eScissor,
-                            vk::DynamicState::eViewport};
+  std::vector dynamicStates{VK_DYNAMIC_STATE_SCISSOR,
+                            VK_DYNAMIC_STATE_VIEWPORT};
 
-  vk::PipelineDynamicStateCreateInfo pdscInfo{
+  VkPipelineDynamicStateCreateInfo pdscInfo{
+      .sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
+      .pNext = 0,
+      .flags = 0,
       .dynamicStateCount = dynamicStates.size(),
       .pDynamicStates = dynamicStates.data()};
 
-  vk::DescriptorSetLayoutBinding ubBinding{
-      0, vk::DescriptorType::eUniformBuffer, 1,
-      vk::ShaderStageFlagBits::eVertex, nullptr};
-  vk::DescriptorSetLayoutCreateInfo layoutInfo{.bindingCount = 1,
-                                               .pBindings = &ubBinding};
-  DescriptorSetLayout =
-      vk::raii::DescriptorSetLayout(Dev->GetDevice(), layoutInfo);
+  VkDescriptorSetLayoutBinding ubBinding{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+                                         1, VK_SHADER_STAGE_VERTEX_BIT,
+                                         nullptr};
+  VkDescriptorSetLayoutCreateInfo layoutInfo{
+      .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+      .pNext = 0,
+      .flags = 0,
+      .bindingCount = 1,
+      .pBindings = &ubBinding};
+  vkCreateDescriptorSetLayout(Dev.GetDevice(), &layoutInfo, 0,
+                              &DescriptorSetLayout);
 
-  vk::PushConstantRange pushRange{
-      .stageFlags = vk::ShaderStageFlagBits::eVertex,
-      .offset = 0,
-      .size = sizeof(glm::mat4)};
+  std::vector<VkPushConstantRange> pushRange;
+  pushRange.push_back(
+      VkPushConstantRange{.stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
+                          .offset = 0,
+                          .size = sizeof(glm::mat4)});
+  pushRange.push_back(
+      VkPushConstantRange{.stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
+                          .offset = sizeof(glm::mat4),
+                          .size = sizeof(unsigned long long)});
 
-  vk::PipelineLayoutCreateInfo plInfo{.setLayoutCount = 0,
-                                      .pushConstantRangeCount = 1,
-                                      .pPushConstantRanges = &pushRange};
-  auto format = Swapch->GetCurrentFormat();
+  VkPipelineLayoutCreateInfo plInfo{
+      .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
+      .pNext = 0,
+      .flags = 0,
+      .setLayoutCount = 1,
+      .pSetLayouts = &DescriptorSetLayout,
+      .pushConstantRangeCount = pushRange.size(),
+      .pPushConstantRanges = pushRange.data()};
+  auto format = Swapch.GetCurrentFormat();
 
-  PipelineLayout = vk::raii::PipelineLayout(Dev->GetDevice(), plInfo);
-  vk::PipelineRenderingCreateInfo prcInfo{
+  vkCreatePipelineLayout(Dev.GetDevice(), &plInfo, 0, &PipelineLayout);
+
+  VkPipelineRenderingCreateInfo prcInfo{
+      .sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO,
+      .pNext = 0,
       .colorAttachmentCount = 1,
       .pColorAttachmentFormats = &format,
-      .depthAttachmentFormat = MainDepth->GetFormat()};
+      .depthAttachmentFormat = VK_FORMAT_UNDEFINED};
 
-  vk::GraphicsPipelineCreateInfo gpcInfo{.pNext = prcInfo,
-                                         .stageCount = 2,
-                                         .pStages = psscInfo,
-                                         .pVertexInputState = &pviscInfo,
-                                         .pInputAssemblyState = &piascInfo,
-                                         .pViewportState = &pvscInfo,
-                                         .pRasterizationState = &prscInfo,
-                                         .pMultisampleState = &pmscInfo,
-                                         .pDepthStencilState = &pdsdcInfo,
-                                         .pColorBlendState = &pcbscInfo,
-                                         .pDynamicState = &pdscInfo,
-                                         .layout = PipelineLayout,
-                                         .renderPass = nullptr};
+  VkGraphicsPipelineCreateInfo gpcInfo{
+      .sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
+      .pNext = &prcInfo,
+      .flags = 0,
+      .stageCount = 2,
+      .pStages = psscInfo,
+      .pVertexInputState = &pviscInfo,
+      .pInputAssemblyState = &piascInfo,
+      .pViewportState = &pvscInfo,
+      .pRasterizationState = &prscInfo,
+      .pMultisampleState = &pmscInfo,
+      .pDepthStencilState = &pdsdcInfo,
+      .pColorBlendState = &pcbscInfo,
+      .pDynamicState = &pdscInfo,
+      .layout = PipelineLayout,
+      .renderPass = nullptr};
 
-  Pipeline = vk::raii::Pipeline(Dev->GetDevice(), nullptr, gpcInfo);
+  vkCreateGraphicsPipelines(Dev.GetDevice(), nullptr, 1, &gpcInfo, 0,
+                            &Pipeline);
 }
-vk::raii::DescriptorSetLayout& Shader::GetDescriptorSetLayout() {
-  return DescriptorSetLayout;
+void Shader::Release() {
+  vkDestroyPipelineLayout(Dev.GetDevice(), PipelineLayout, nullptr);
+  vkDestroyPipeline(Dev.GetDevice(), Pipeline, nullptr);
+  vkDestroyDescriptorSetLayout(Dev.GetDevice(), DescriptorSetLayout, nullptr);
 }
-vk::raii::PipelineLayout& Shader::GetPipelineLayout() { return PipelineLayout; }
