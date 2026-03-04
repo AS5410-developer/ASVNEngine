@@ -11,18 +11,20 @@ PhysicalDeviceManager& PhysicalDeviceManager::Create() {
   return *result;
 }
 void PhysicalDeviceManager::Release() {
-  delete this;
   CurrentInstance = 0;
+  delete this;
 }
-
-PhysicalDevice& PhysicalDeviceManager::GetBestPhysicalDevice() { return Best; }
 
 const std::vector<PhysicalDevice> PhysicalDeviceManager::GetDevices() const {
   return Devices;
 }
 
 void PhysicalDeviceManager::Enumerate() {
-  auto devs = MainInstance.enumeratePhysicalDevices();
+  unsigned int count = 0;
+  vkEnumeratePhysicalDevices(MainInstance, &count, nullptr);
+  std::vector<VkPhysicalDevice> devs(count);
+  vkEnumeratePhysicalDevices(MainInstance, &count,
+                             reinterpret_cast<VkPhysicalDevice*>(devs.data()));
   unsigned long long maxScore = 0;
   for (auto dev : devs) {
     PhysicalDevice Device(dev);

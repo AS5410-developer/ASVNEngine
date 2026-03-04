@@ -6,26 +6,26 @@
 
 class VertexBuffer final {
  public:
-  VertexBuffer();
-  VertexBuffer(Device* dev, std::vector<Vertex> data);
-  VertexBuffer(vk::raii::Buffer& buf);
+  VertexBuffer() {}
+  VertexBuffer(Device& dev, std::vector<Vertex> data);
+  VertexBuffer(VkBuffer buf) : Buf(buf) {}
 
-  void SetDevice(Device* dev);
-  void SetData(std::vector<Vertex> data);
+  void SetDevice(Device& dev) { Dev = dev; }
+  void SetData(std::vector<Vertex> data) { Data = data; }
   bool Created();
 
   void Create();
-  vk::raii::Buffer& GetBuffer();
-  VideoMemory& GetVideoMemory();
-  unsigned long long GetVertexCount();
+  VkBuffer& GetBuffer() { return Buf; }
+  VideoMemory& GetVideoMemory() { return VideoMem; }
+  unsigned long long GetVertexCount() { return Data.size(); }
   void Release();
 
   virtual ~VertexBuffer() = default;
 
  private:
-  vk::raii::Buffer* Buf = nullptr;
-  Device* Dev = 0;
-  VideoMemory* VideoMem;
+  VkBuffer Buf = nullptr;
+  Device Dev;
+  VideoMemory VideoMem;
   std::vector<Vertex> Data;
 };
 

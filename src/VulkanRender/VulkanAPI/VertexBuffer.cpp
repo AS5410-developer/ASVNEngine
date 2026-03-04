@@ -1,35 +1,33 @@
 #include "VertexBuffer.hpp"
 
-VertexBuffer::VertexBuffer() {}
-VertexBuffer::VertexBuffer(Device* dev, std::vector<Vertex> data)
+#include <cstring>
+
+VertexBuffer::VertexBuffer(Device& dev, std::vector<Vertex> data)
     : Dev(dev), Data(data) {
   Create();
 }
-VertexBuffer::VertexBuffer(vk::raii::Buffer& buf) : Buf(&buf) {}
 
 void VertexBuffer::Create() {
-  vk::BufferCreateInfo bcInfo{.size = Data.size() * sizeof(Vertex),
-                              .usage = vk::BufferUsageFlagBits::eVertexBuffer,
-                              .sharingMode = vk::SharingMode::eExclusive};
-  Buf = new vk::raii::Buffer(Dev->GetDevice(), bcInfo);
+  VkBufferCreateInfo bcInfo{.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+                            .pNext = nullptr,
+                            .flags = 0,
+                            .size = Data.size() * sizeof(Vertex),
+                            .usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+                            .sharingMode = VK_SHARING_MODE_EXCLUSIVE};
+  vkCreateBuffer(Dev.GetDevice(), &bcInfo, nullptr, &Buf);
   VideoMem = new VideoMemory(Dev, bcInfo.size, Buf->getMemoryRequirements(),
                              vk::MemoryPropertyFlagBits::eHostVisible |
                                  vk::MemoryPropertyFlagBits::eHostCoherent);
-  Buf->bindMemory(VideoMem->GetDeviceMemory(), 0);
+  vkBindBufferMemory(Dev.GetDevice(), Buf, VideoMem->GetDeviceMemory(), 0);
   void* mem = VideoMem->Map();
-  memcpy(mem, Data.data(), Data.size() * sizeof(Vertex));
+  std::memcpy(mem, Data.data(), Data.size() * sizeof(Vertex));
   VideoMem->Unmap();
 }
-void VertexBuffer::SetDevice(Device* dev) { Dev = dev; }
-void VertexBuffer::SetData(std::vector<Vertex> data) { Data = data; }
-vk::raii::Buffer& VertexBuffer::GetBuffer() { return *Buf; }
 bool VertexBuffer::Created() {
   if (!this) return false;
   return Buf != nullptr;
 }
-VideoMemory& VertexBuffer::GetVideoMemory() { return *VideoMem; }
-unsigned long long VertexBuffer::GetVertexCount() { return Data.size(); }
 void VertexBuffer::Release() {
-  VideoMem->Release();
-  delete Buf;
+  VideoMem.Release();
+  vkDestroyBuffer(Dev.GetDevice(), Buf, nullptr);
 }

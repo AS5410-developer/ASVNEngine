@@ -9,7 +9,7 @@ class PhysicalDeviceManager final {
   static PhysicalDeviceManager& Create();
   void Release();
 
-  PhysicalDevice& GetBestPhysicalDevice();
+  PhysicalDevice& GetBestPhysicalDevice() { return Best; }
 
   const std::vector<PhysicalDevice> GetDevices() const;
 

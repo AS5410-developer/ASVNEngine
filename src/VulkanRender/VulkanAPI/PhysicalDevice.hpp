@@ -6,13 +6,13 @@
 class PhysicalDevice final {
  public:
   PhysicalDevice();
-  PhysicalDevice(vk::raii::PhysicalDevice dev);
+  PhysicalDevice(VkPhysicalDevice dev);
 
-  unsigned long long GetScore() const;
-  vk::raii::PhysicalDevice& GetDevice();
+  unsigned long long GetScore() const { return Score; }
+  VkPhysicalDevice& GetDevice() { return Device; }
 
-  unsigned int GetGraphicsQueueFamily() const;
-  unsigned int GetComputeQueueFamily() const;
+  unsigned int GetGraphicsQueueFamily() const { return GraphicsQueueFamily; }
+  unsigned int GetComputeQueueFamily() const { return ComputeQueueFamily; }
 
   void GetQueueFamilies();
 
@@ -21,7 +21,7 @@ class PhysicalDevice final {
   virtual ~PhysicalDevice() = default;
 
  private:
-  vk::raii::PhysicalDevice Device = nullptr;
+  VkPhysicalDevice Device = nullptr;
   unsigned long long Score = 0;
   unsigned int GraphicsQueueFamily = 0;
   unsigned int ComputeQueueFamily = 0;

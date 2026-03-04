@@ -1,23 +1,26 @@
 #include "PhysicalDevice.hpp"
+
+#include <algorithm>
 PhysicalDevice::PhysicalDevice() {}
-PhysicalDevice::PhysicalDevice(vk::raii::PhysicalDevice dev) {
-  Device = dev;
+PhysicalDevice::PhysicalDevice(VkPhysicalDevice dev) : Device(dev) {
   RecalculateScore();
   GetQueueFamilies();
 }
 
-unsigned long long PhysicalDevice::GetScore() const { return Score; }
-
 void PhysicalDevice::RecalculateScore() {
   Score = 0;
-  auto features = Device.getFeatures();
-  auto properties = Device.getProperties();
+
+  VkPhysicalDeviceProperties properties = {};
+  VkPhysicalDeviceFeatures features = {};
+  vkGetPhysicalDeviceProperties(Device, &properties);
+  vkGetPhysicalDeviceFeatures(Device, &features);
+
   if (!features.geometryShader) return;
 
-  if (properties.apiVersion < vk::ApiVersion14) return;
-  if (properties.deviceType == vk::PhysicalDeviceType::eIntegratedGpu)
+  if (properties.apiVersion < VK_API_VERSION_1_4) return;
+  if (properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU)
     Score += 100;
-  if (properties.deviceType == vk::PhysicalDeviceType::eDiscreteGpu)
+  if (properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
     Score += 200;
 
   Score += properties.limits.maxImageDimension2D * 10;
@@ -28,28 +31,24 @@ void PhysicalDevice::RecalculateScore() {
            properties.limits.maxFramebufferLayers;
 }
 
-unsigned int PhysicalDevice::GetGraphicsQueueFamily() const {
-  return GraphicsQueueFamily;
-}
-unsigned int PhysicalDevice::GetComputeQueueFamily() const {
-  return ComputeQueueFamily;
-}
-
 void PhysicalDevice::GetQueueFamilies() {
-  auto families = Device.getQueueFamilyProperties();
+  unsigned int queueFamilyCount = 0;
+  vkGetPhysicalDeviceQueueFamilyProperties(Device, &queueFamilyCount, nullptr);
+  std::vector<VkQueueFamilyProperties> families(queueFamilyCount);
+  vkGetPhysicalDeviceQueueFamilyProperties(
+      Device, &queueFamilyCount,
+      reinterpret_cast<VkQueueFamilyProperties*>(families.data()));
 
   GraphicsQueueFamily = static_cast<uint32_t>(std::distance(
-      families.begin(),
-      std::find_if(families.begin(), families.end(),
-                   [](vk::QueueFamilyProperties const& input) {
-                     return input.queueFlags & vk::QueueFlagBits::eGraphics;
-                   })));
+      families.begin(), std::find_if(families.begin(), families.end(),
+                                     [](VkQueueFamilyProperties const& input) {
+                                       return input.queueFlags &
+                                              VK_QUEUE_GRAPHICS_BIT;
+                                     })));
   ComputeQueueFamily = static_cast<uint32_t>(std::distance(
-      families.begin(),
-      std::find_if(families.begin(), families.end(),
-                   [](vk::QueueFamilyProperties const& input) {
-                     return input.queueFlags & vk::QueueFlagBits::eCompute;
-                   })));
+      families.begin(), std::find_if(families.begin(), families.end(),
+                                     [](VkQueueFamilyProperties const& input) {
+                                       return input.queueFlags &
+                                              VK_QUEUE_COMPUTE_BIT;
+                                     })));
 }
-
-vk::raii::PhysicalDevice& PhysicalDevice::GetDevice() { return Device; }
