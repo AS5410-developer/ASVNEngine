@@ -14,14 +14,14 @@ T* Copy(T* data) {
 
 class VideoMemory final {
  public:
-  VideoMemory();
-  VideoMemory(Device* dev, unsigned long long size, vk::MemoryRequirements req,
-              vk::MemoryPropertyFlags props);
+  VideoMemory() {}
+  VideoMemory(Device& dev, unsigned long long size, VkMemoryRequirements req,
+              VkMemoryPropertyFlags props);
 
   void* Map();
-  void Unmap();
+  void Unmap() { vkUnmapMemory(Dev.GetDevice(), Mem); }
 
-  vk::raii::DeviceMemory& GetDeviceMemory();
+  VkDeviceMemory& GetDeviceMemory() { return Mem; }
 
   void Release();
 
@@ -29,10 +29,10 @@ class VideoMemory final {
 
  private:
   unsigned int GetMemType(uint32_t typeFilter,
-                          vk::MemoryPropertyFlags properties);
+                          VkMemoryPropertyFlags properties);
 
-  vk::raii::DeviceMemory Mem = nullptr;
-  Device* Dev;
+  VkDeviceMemory Mem = nullptr;
+  Device Dev;
   unsigned long long Size;
 };
 

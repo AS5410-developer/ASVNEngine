@@ -1,21 +1,22 @@
 #include "Memory.hpp"
 
-VideoMemory::VideoMemory() {}
-VideoMemory::VideoMemory(Device* dev, unsigned long long size,
-                         vk::MemoryRequirements req,
-                         vk::MemoryPropertyFlags props)
+VideoMemory::VideoMemory(Device& dev, unsigned long long size,
+                         VkMemoryRequirements req, VkMemoryPropertyFlags props)
     : Dev(dev), Size(size) {
-  vk::MemoryAllocateInfo maInfo{
+  VkMemoryAllocateInfo maInfo{
+      .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
+      .pNext = 0,
       .allocationSize = Size,
       .memoryTypeIndex = GetMemType(req.memoryTypeBits, props)
 
   };
-  Mem = vk::raii::DeviceMemory(dev->GetDevice(), maInfo);
+  vkAllocateMemory(dev.GetDevice(), &maInfo, 0, &Mem);
 }
 
 unsigned int VideoMemory::GetMemType(uint32_t typeFilter,
-                                     vk::MemoryPropertyFlags properties) {
-  auto t = Dev->GetPhysicalDevice().GetDevice().getMemoryProperties();
+                                     VkMemoryPropertyFlags properties) {
+  VkPhysicalDeviceMemoryProperties t;
+  vkGetPhysicalDeviceMemoryProperties(Dev.GetPhysicalDevice().GetDevice(), &t);
 
   for (unsigned int i = 0; i < t.memoryTypeCount; i++) {
     if ((typeFilter & (1 << i)) &&
@@ -25,11 +26,13 @@ unsigned int VideoMemory::GetMemType(uint32_t typeFilter,
   }
   return 0;
 }
-vk::raii::DeviceMemory& VideoMemory::GetDeviceMemory() { return Mem; }
 
-void* VideoMemory::Map() { return Mem.mapMemory(0, Size); }
-void VideoMemory::Unmap() { Mem.unmapMemory(); }
+void* VideoMemory::Map() {
+  void* data;
+  vkMapMemory(Dev.GetDevice(), Mem, 0, Size, 0, &data);
+  return data;
+}
 void VideoMemory::Release() {
-  Mem.clear();
+  vkFreeMemory(Dev.GetDevice(), Mem, 0);
   Mem = nullptr;
 }
