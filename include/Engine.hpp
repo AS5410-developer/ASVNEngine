@@ -5,6 +5,7 @@
 
 #include <Console.hpp>
 #include <Engine/IEngine.hpp>
+#include <chrono>
 #include <map>
 
 namespace AS::Engine {
@@ -42,6 +43,10 @@ class ENGINE_EXPORT Engine final : public IEngine {
   virtual IClient* GetClient() override { return ClientInstance; }
   virtual IRender* GetRender() override { return RenderInstance; }
   virtual IPlatform& GetPlatform() override { return *PlatformInstance; }
+
+  virtual WindowSize GetWindowSize() const override {
+    return MainWindow->GetSize();
+  }
 
   virtual Tick GetCurrentTime() const override { return CurrentTime; }
   virtual Tick GetTickrate() const override { return TickInSecond; }

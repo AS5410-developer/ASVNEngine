@@ -6,9 +6,9 @@
 
 class Device final {
  public:
-  Device();
+  Device() {}
   Device(PhysicalDevice pdev, unsigned int queueFamily, VkSurfaceKHR surface);
-  Device(VkDevice dev);
+  Device(VkDevice dev) : Dev(dev) {}
 
   void Create();
   unsigned int FindPresentQueueID();

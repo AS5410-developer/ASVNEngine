@@ -49,6 +49,8 @@ class ENGINE_EXPORT IEngine : public IModule {
   virtual IRender* GetRender() = 0;
   virtual IPlatform& GetPlatform() = 0;
 
+  virtual WindowSize GetWindowSize() const = 0;
+
   virtual Tick GetCurrentTime() const = 0;
   virtual Tick GetTickrate() const = 0;
 

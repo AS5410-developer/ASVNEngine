@@ -1,56 +1,60 @@
 #include "Swapchain.hpp"
 
+#include <algorithm>
+
 #include "Engine.hpp"
 
-Swapchain::Swapchain() {}
-Swapchain::Swapchain(Device* dev, vk::raii::SurfaceKHR* surface)
-    : Dev(dev), Surface(std::move(surface)) {
+Swapchain::Swapchain(Device& dev, VkSurfaceKHR surface)
+    : Dev(dev), Surface(surface) {
   Create();
 }
-Swapchain::Swapchain(vk::raii::SwapchainKHR swch) : Swapch(std::move(swch)) {}
 
-vk::Format Swapchain::BestFormat(vk::ColorSpaceKHR& colorSpace) {
-  auto formats =
-      Dev->GetPhysicalDevice().GetDevice().getSurfaceFormatsKHR(**Surface);
+VkFormat Swapchain::BestFormat(VkColorSpaceKHR& colorSpace) {
+  unsigned int count = 0;
+  vkGetPhysicalDeviceSurfaceFormatsKHR(Dev.GetPhysicalDevice().GetDevice(),
+                                       Surface, &count, 0);
+  std::vector<VkSurfaceFormatKHR> formats(count);
+  vkGetPhysicalDeviceSurfaceFormatsKHR(Dev.GetPhysicalDevice().GetDevice(),
+                                       Surface, &count, formats.data());
   for (const auto& format : formats) {
-    if (format.format == vk::Format::eB8G8R8A8Srgb &&
-        format.colorSpace == vk::ColorSpaceKHR::eSrgbNonlinear) {
+    if (format.format == VK_FORMAT_B8G8R8A8_SRGB &&
+        format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
       colorSpace = format.colorSpace;
       return format.format;
     }
   }
-  colorSpace = vk::ColorSpaceKHR::eSrgbNonlinear;
-  return vk::Format::eB8G8R8A8Srgb;
-}
-vk::Image& Swapchain::GetImage(unsigned char i) { return Images[i]; }
-vk::raii::ImageView& Swapchain::GetImageView(unsigned char i) {
-  return ImageViews[i];
+  colorSpace = formats[0].colorSpace;
+  return formats[0].format;
 }
 
-vk::Extent2D Swapchain::GetSize() {
-  auto caps =
-      Dev->GetPhysicalDevice().GetDevice().getSurfaceCapabilitiesKHR(**Surface);
-  return vk::Extent2D{
-      std::clamp<uint32_t>(Engine::GetInstance().GetGlobals()->width,
-                           caps.minImageExtent.width,
-                           caps.maxImageExtent.width),
-      std::clamp<uint32_t>(Engine::GetInstance().GetGlobals()->height,
-                           caps.minImageExtent.height,
-                           caps.maxImageExtent.height)};
+VkExtent2D Swapchain::GetSize() {
+  VkSurfaceCapabilitiesKHR caps;
+  vkGetPhysicalDeviceSurfaceCapabilitiesKHR(Dev.GetPhysicalDevice().GetDevice(),
+                                            Surface, &caps);
+  return VkExtent2D{std::clamp<unsigned int>(MainEngine->GetWindowSize().x,
+                                             caps.minImageExtent.width,
+                                             caps.maxImageExtent.width),
+                    std::clamp<unsigned int>(MainEngine->GetWindowSize().y,
+                                             caps.minImageExtent.height,
+                                             caps.maxImageExtent.height)};
 }
 
 void Swapchain::Create() {
-  if (!**Surface) {
+  if (!Surface) {
     return;
   }
+  unsigned int count = 0;
   Format = BestFormat(ColorSpace);
   PresentMode = BestPresentMode();
-  auto caps =
-      Dev->GetPhysicalDevice().GetDevice().getSurfaceCapabilitiesKHR(**Surface);
+  VkSurfaceCapabilitiesKHR caps;
+  vkGetPhysicalDeviceSurfaceCapabilitiesKHR(Dev.GetPhysicalDevice().GetDevice(),
+                                            Surface, &caps);
 
-  vk::SwapchainCreateInfoKHR swInfo{
-      .flags = vk::SwapchainCreateFlagsKHR(),
-      .surface = **Surface,
+  VkSwapchainCreateInfoKHR swInfo{
+      .sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
+      .pNext = 0,
+      .flags = VkSwapchainCreateFlagsKHR(),
+      .surface = Surface,
       .minImageCount =
           caps.maxImageCount > 0
               ? std::min(std::max(3u, caps.minImageCount), caps.maxImageCount)
@@ -59,62 +63,67 @@ void Swapchain::Create() {
       .imageColorSpace = ColorSpace,
       .imageExtent = GetSize(),
       .imageArrayLayers = 1,
-      .imageUsage = vk::ImageUsageFlagBits::eColorAttachment,
-      .imageSharingMode = vk::SharingMode::eExclusive,
+      .imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+      .imageSharingMode = VK_SHARING_MODE_EXCLUSIVE,
       .queueFamilyIndexCount = 0,
       .pQueueFamilyIndices = nullptr,
       .preTransform = caps.currentTransform,
-      .compositeAlpha = vk::CompositeAlphaFlagBitsKHR::eOpaque,
+      .compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
       .presentMode = PresentMode,
       .clipped = true,
       .oldSwapchain = nullptr,
   };
-  if (!Dev->IsPresentEqualsGraphics()) {
-    unsigned int queues[2] = {Dev->GetGraphicsID(), Dev->GetPresentID()};
-    swInfo.imageSharingMode = vk::SharingMode::eConcurrent;
+  if (!Dev.IsPresentEqualsGraphics()) {
+    unsigned int queues[2] = {Dev.GetGraphicsID(), Dev.GetPresentID()};
+    swInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
     swInfo.queueFamilyIndexCount = 2;
     swInfo.pQueueFamilyIndices = queues;
   }
-  Swapch = vk::raii::SwapchainKHR(Dev->GetDevice(), swInfo);
-  Images = Swapch.getImages();
+  vkCreateSwapchainKHR(Dev.GetDevice(), &swInfo, 0, &Swapch);
 
-  vk::ImageViewCreateInfo ivcInfo{
-      .viewType = vk::ImageViewType::e2D,
+  vkGetSwapchainImagesKHR(Dev.GetDevice(), Swapch, &count, 0);
+  Images.reserve(count);
+  vkGetSwapchainImagesKHR(Dev.GetDevice(), Swapch, &count, Images.data());
+
+  count = 0;
+  VkImageViewCreateInfo ivcInfo{
+      .viewType = VK_IMAGE_VIEW_TYPE_2D,
       .format = Format,
-      .subresourceRange = {vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1}};
+      .subresourceRange = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1}};
   for (auto& image : Images) {
     ivcInfo.image = image;
-    ImageViews.emplace_back(Dev->GetDevice(), ivcInfo);
+    vkCreateImageView(Dev.GetDevice(), &ivcInfo, 0, &ImageViews[count]);
+    ++count;
   }
 }
 
-unsigned int Swapchain::NextImage(vk::raii::Semaphore& PresentSemaphore) {
-  auto [result, id] =
-      Swapch.acquireNextImage(UINT64_MAX, PresentSemaphore, nullptr);
+unsigned int Swapchain::NextImage(VkSemaphore& PresentSemaphore) {
+  unsigned int id;
+  vkAcquireNextImageKHR(Dev.GetDevice(), Swapch, UINT64_MAX, PresentSemaphore,
+                        0, &id);
   return id;
 }
 
-void Swapchain::SetNewSurface(vk::raii::SurfaceKHR* surface) {
-  Surface = surface;
-}
-
-vk::PresentModeKHR Swapchain::BestPresentMode() {
-  auto modes =
-      Dev->GetPhysicalDevice().GetDevice().getSurfacePresentModesKHR(**Surface);
+VkPresentModeKHR Swapchain::BestPresentMode() {
+  unsigned int count = 0;
+  vkGetPhysicalDeviceSurfacePresentModesKHR(Dev.GetPhysicalDevice().GetDevice(),
+                                            Surface, &count, 0);
+  std::vector<VkPresentModeKHR> modes(count);
+  vkGetPhysicalDeviceSurfacePresentModesKHR(Dev.GetPhysicalDevice().GetDevice(),
+                                            Surface, &count, modes.data());
 
   for (auto& mode : modes) {
-    if (mode == vk::PresentModeKHR::eMailbox) {
+    if (mode == VK_PRESENT_MODE_MAILBOX_KHR) {
       return mode;
     }
   }
 
-  return vk::PresentModeKHR::eFifo;
+  return VK_PRESENT_MODE_FIFO_KHR;
 }
-
-vk::Format Swapchain::GetCurrentFormat() { return Format; }
-vk::ColorSpaceKHR Swapchain::GetCurrentColorSpace() { return ColorSpace; }
-vk::raii::SwapchainKHR& Swapchain::GetSwapchain() { return Swapch; }
 void Swapchain::Release() {
-  ImageViews.clear();
-  Swapch = nullptr;
+  for (auto ImageView : ImageViews) {
+    vkDestroyImageView(Dev.GetDevice(), ImageView, 0);
+  }
+  vkDestroySwapchainKHR(Dev.GetDevice(), Swapch, 0);
+  Swapch = 0;
 }

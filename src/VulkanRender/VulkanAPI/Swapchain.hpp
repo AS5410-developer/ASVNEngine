@@ -6,42 +6,42 @@
 
 class Swapchain final {
  public:
-  Swapchain();
-  Swapchain(Device* dev, vk::raii::SurfaceKHR* surface);
-  Swapchain(vk::raii::SwapchainKHR swch);
+  Swapchain() {}
+  Swapchain(Device& dev, VkSurfaceKHR surface);
+  Swapchain(VkSwapchainKHR swch) : Swapch(swch) {}
 
   void Create();
-  vk::raii::SwapchainKHR& GetSwapchain();
+  VkSwapchainKHR& GetSwapchain() { return Swapch; }
 
-  vk::Format BestFormat(vk::ColorSpaceKHR& colorSpace);
-  vk::PresentModeKHR BestPresentMode();
+  VkFormat BestFormat(VkColorSpaceKHR& colorSpace);
+  VkPresentModeKHR BestPresentMode();
 
-  vk::Format GetCurrentFormat();
-  vk::ColorSpaceKHR GetCurrentColorSpace();
-  vk::PresentModeKHR GetCurrentPresentMode();
-  vk::Image& GetImage(unsigned char i);
-  vk::raii::ImageView& GetImageView(unsigned char i);
+  VkFormat GetCurrentFormat() { return Format; }
+  VkColorSpaceKHR GetCurrentColorSpace() { return ColorSpace; }
+  VkPresentModeKHR GetCurrentPresentMode() { return PresentMode; }
+  VkImage& GetImage(unsigned char i) { return Images[i]; }
+  VkImageView& GetImageView(unsigned char i) { return ImageViews[i]; }
 
-  void SetNewSurface(vk::raii::SurfaceKHR* surface);
+  void SetNewSurface(VkSurfaceKHR surface) { Surface = surface; }
 
-  unsigned int NextImage(vk::raii::Semaphore& PresentSemaphore);
+  unsigned int NextImage(VkSemaphore& PresentSemaphore);
 
-  vk::Extent2D GetSize();
+  VkExtent2D GetSize();
 
   void Release();
 
   virtual ~Swapchain() = default;
 
  private:
-  vk::raii::SwapchainKHR Swapch = nullptr;
-  Device* Dev;
-  vk::raii::SurfaceKHR* Surface = nullptr;
+  VkSwapchainKHR Swapch = nullptr;
+  Device Dev;
+  VkSurfaceKHR Surface = nullptr;
 
-  vk::Format Format;
-  vk::ColorSpaceKHR ColorSpace;
-  vk::PresentModeKHR PresentMode;
-  std::vector<vk::Image> Images;
-  std::vector<vk::raii::ImageView> ImageViews;
+  VkFormat Format;
+  VkColorSpaceKHR ColorSpace;
+  VkPresentModeKHR PresentMode;
+  std::vector<VkImage> Images;
+  std::vector<VkImageView> ImageViews;
 };
 
 extern Swapchain* MainSwapchain;

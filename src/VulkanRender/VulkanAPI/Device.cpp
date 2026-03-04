@@ -1,12 +1,10 @@
 #include <Device.hpp>
 
-Device::Device() {}
 Device::Device(PhysicalDevice pdev, unsigned int queueFamily,
                VkSurfaceKHR surface)
     : PDev(pdev), CurrentQueueFamily(queueFamily), Surface(surface) {
   Create();
 }
-Device::Device(VkDevice dev) { Dev = std::move(dev); }
 
 unsigned int Device::FindPresentQueueID() {
   unsigned int PresentID = CurrentQueueFamily;
