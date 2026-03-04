@@ -6,22 +6,22 @@
 
 class Depth : public AbstractImage {
  public:
-  Depth();
-  Depth(Device* dev, CommandBuffer* buffer, unsigned int width,
+  Depth() {}
+  Depth(Device& dev, CommandBuffer& buffer, unsigned int width,
         unsigned int height);
 
-  void Create(Device* dev, CommandBuffer* buffer, unsigned int width,
+  void Create(Device& dev, CommandBuffer& buffer, unsigned int width,
               unsigned int height);
-  vk::Format GetFormat();
+  VkFormat GetFormat() { return CurrentFormat; }
   void Release();
 
   virtual ~Depth() = default;
 
  private:
-  vk::Format FindSupportedFormat(const std::vector<vk::Format>& candidates,
-                                 vk::ImageTiling tiling,
-                                 vk::FormatFeatureFlags features);
-  vk::Format CurrentFormat;
+  VkFormat FindSupportedFormat(const std::vector<VkFormat>& candidates,
+                               VkImageTiling tiling,
+                               VkFormatFeatureFlags features);
+  VkFormat CurrentFormat;
 };
 
 #endif

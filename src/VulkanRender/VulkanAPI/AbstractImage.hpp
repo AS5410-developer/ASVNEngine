@@ -7,27 +7,27 @@
 
 class AbstractImage {
  public:
-  vk::raii::Image& GetImage();
-  vk::raii::ImageView& GetImageView();
-  vk::raii::Buffer& GetBuffer();
+  VkImage& GetImage() { return Img; }
+  VkImageView& GetImageView() { return ImgView; }
+  VkBuffer& GetBuffer() { return Buffer; }
 
   virtual ~AbstractImage() = default;
 
  protected:
-  void CreateI(Device* dev, CommandBuffer* buffer, unsigned int width,
-               unsigned int height, unsigned char channels, vk::Format format,
-               vk::ImageTiling tilling, vk::ImageUsageFlags usage,
-               vk::MemoryPropertyFlags properties, vk::ImageAspectFlags aspect);
-  void Apply(unsigned int width, unsigned int height, vk::ImageLayout dest);
+  void CreateI(Device& dev, CommandBuffer& buffer, unsigned int width,
+               unsigned int height, unsigned char channels, VkFormat format,
+               VkImageTiling tilling, VkImageUsageFlags usage,
+               VkMemoryPropertyFlags properties, VkImageAspectFlags aspect);
+  void Apply(unsigned int width, unsigned int height, VkImageLayout dest);
 
-  vk::raii::Image Img = nullptr;
-  vk::raii::ImageView ImgView = nullptr;
-  vk::raii::Buffer Buffer = nullptr;
-  vk::raii::Buffer IBuffer = nullptr;
-  VideoMemory* VideoMem;
-  VideoMemory* ImageMem;
-  CommandBuffer* CBuffer;
-  Device* Dev;
+  VkImage Img = nullptr;
+  VkImageView ImgView = nullptr;
+  VkBuffer Buffer = nullptr;
+  VkBuffer IBuffer = nullptr;
+  VideoMemory VideoMem;
+  VideoMemory ImageMem;
+  CommandBuffer CBuffer;
+  Device Dev;
 };
 
 #endif

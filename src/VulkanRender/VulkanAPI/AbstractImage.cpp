@@ -1,73 +1,78 @@
 #include "AbstractImage.hpp"
 
-vk::raii::Image &AbstractImage::GetImage( )
-{
-	return Img;
+void AbstractImage::CreateI(Device& dev, CommandBuffer& buffer,
+                            unsigned int width, unsigned int height,
+                            unsigned char channels, VkFormat format,
+                            VkImageTiling tilling, VkImageUsageFlags usage,
+                            VkMemoryPropertyFlags properties,
+                            VkImageAspectFlags aspect) {
+  VkImageCreateInfo icInfo{
+      .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
+      .pNext = 0,
+      .imageType = VK_IMAGE_TYPE_2D,
+      .format = format,
+      .extent = {.width = width, .height = height, .depth = channels},
+      .mipLevels = 1,
+      .arrayLayers = 1,
+      .samples = VK_SAMPLE_COUNT_1_BIT,
+      .tiling = tilling,
+      .usage = usage,
+      .sharingMode = VK_SHARING_MODE_EXCLUSIVE};
+
+  vkCreateImage(Dev.GetDevice(), &icInfo, 0, &Img);
+
+  VkMemoryRequirements req;
+  vkGetImageMemoryRequirements(Dev.GetDevice(), Img, &req);
+
+  VkBufferCreateInfo bcInfo{.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+                            .pNext = 0,
+                            .flags = 0,
+                            .size = req.size,
+                            .usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+                            .sharingMode = VK_SHARING_MODE_EXCLUSIVE};
+  vkCreateBuffer(Dev.GetDevice(), &bcInfo, 0, &Buffer);
+
+  vkGetBufferMemoryRequirements(Dev.GetDevice(), Buffer, &req);
+  VideoMem = VideoMemory(dev, bcInfo.size, req,
+                         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                             VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+  vkBindBufferMemory(Dev.GetDevice(), Buffer, VideoMem.GetDeviceMemory(), 0);
+
+  vkGetImageMemoryRequirements(Dev.GetDevice(), Img, &req);
+
+  ImageMem = VideoMemory(dev, req.size, req, properties);
+  vkBindImageMemory(Dev.GetDevice(), Img, ImageMem.GetDeviceMemory(), 0);
+
+  VkImageViewCreateInfo ivcInfo{
+      .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+      .pNext = 0,
+      .flags = 0,
+      .image = Img,
+      .viewType = VK_IMAGE_VIEW_TYPE_2D,
+      .format = format,
+      .subresourceRange = {aspect, 0, 1, 0, 1}};
+  vkCreateImageView(Dev.GetDevice(), &ivcInfo, 0, &ImgView);
 }
-vk::raii::ImageView &AbstractImage::GetImageView( )
-{
-	return ImgView;
-}
-vk::raii::Buffer &AbstractImage::GetBuffer( )
-{
-	return Buffer;
-}
-
-void AbstractImage::CreateI( Device *dev, CommandBuffer *buffer, unsigned int width, unsigned int height, unsigned char channels, vk::Format format, vk::ImageTiling tilling, vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties, vk::ImageAspectFlags aspect )
-{
-	vk::ImageCreateInfo icInfo{
-		.imageType = vk::ImageType::e2D,
-		.format = format,
-		.extent = {
-			.width = width,
-			.height = height,
-			.depth = channels
-		},
-		.mipLevels = 1,
-		.arrayLayers = 1,
-		.samples = vk::SampleCountFlagBits::e1,
-		.tiling = tilling,
-		.usage = usage,
-		.sharingMode = vk::SharingMode::eExclusive
-	};
-
-	Img = vk::raii::Image( dev->GetDevice( ), icInfo );
-
-	vk::BufferCreateInfo bcInfo{
-		.size = Img.getMemoryRequirements( ).size,
-		.usage = vk::BufferUsageFlagBits::eVertexBuffer,
-		.sharingMode = vk::SharingMode::eExclusive
-	};
-	Buffer = vk::raii::Buffer( Dev->GetDevice( ), bcInfo );
-	VideoMem = new VideoMemory( dev, bcInfo.size, Buffer.getMemoryRequirements( ), vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent );
-	Buffer.bindMemory( VideoMem->GetDeviceMemory( ), 0 );
-
-	ImageMem = new VideoMemory( dev, Img.getMemoryRequirements( ).size, Img.getMemoryRequirements( ), properties );
-	Img.bindMemory( ImageMem->GetDeviceMemory( ), 0 );
-
-	vk::ImageViewCreateInfo ivcInfo{ .image = Img,
-		.viewType = vk::ImageViewType::e2D,
-		.format = format,
-		.subresourceRange = { aspect, 0, 1, 0, 1 }
-	};
-	ImgView = vk::raii::ImageView( Dev->GetDevice( ), ivcInfo );
-
-}
-void AbstractImage::Apply( unsigned int width, unsigned int height, vk::ImageLayout dest )
-{
-	vk::raii::CommandBuffer copyBuffer = CBuffer->StartSTCommands( );
-	vk::BufferImageCopy biCopy{
-		.bufferOffset = 0,
-		.bufferRowLength = 0,
-		.bufferImageHeight = 0,
-		.imageSubresource = {
-			vk::ImageAspectFlagBits::eColor,
-			0, 0, 1
-		},
-		.imageOffset = {0, 0, 0}, .imageExtent = {width, height, 1}
-	};
-	CBuffer->TransitionImageLayout( copyBuffer, vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eTransfer, {}, vk::AccessFlagBits::eTransferWrite, vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal, Img );
-	copyBuffer.copyBufferToImage( Buffer, Img, vk::ImageLayout::eTransferDstOptimal, biCopy );
-	CBuffer->TransitionImageLayout( copyBuffer, vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eFragmentShader, vk::AccessFlagBits::eTransferWrite, vk::AccessFlagBits::eShaderRead, vk::ImageLayout::eTransferDstOptimal, dest, Img );
-	CBuffer->EndSTCommands( copyBuffer );
+void AbstractImage::Apply(unsigned int width, unsigned int height,
+                          VkImageLayout dest) {
+  VkCommandBuffer copyBuffer = CBuffer.StartSTCommands();
+  VkBufferImageCopy biCopy{
+      .bufferOffset = 0,
+      .bufferRowLength = 0,
+      .bufferImageHeight = 0,
+      .imageSubresource = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1},
+      .imageOffset = {0, 0, 0},
+      .imageExtent = {width, height, 1}};
+  CBuffer.TransitionImageLayout(
+      copyBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+      VK_PIPELINE_STAGE_TRANSFER_BIT, {}, VK_ACCESS_TRANSFER_WRITE_BIT,
+      VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, Img);
+  vkCmdCopyBufferToImage(copyBuffer, Buffer, Img,
+                         VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &biCopy);
+  CBuffer.TransitionImageLayout(
+      copyBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT,
+      VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_ACCESS_TRANSFER_WRITE_BIT,
+      VK_ACCESS_SHADER_READ_BIT, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, dest,
+      Img);
+  CBuffer.EndSTCommands(copyBuffer);
 }

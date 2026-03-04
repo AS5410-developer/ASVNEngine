@@ -1,8 +1,6 @@
 #include "Shader.hpp"
 
 #include "Depth.hpp"
-#include "filesystem.h"
-#include "glm.hpp"
 
 extern Depth* MainDepth;
 
