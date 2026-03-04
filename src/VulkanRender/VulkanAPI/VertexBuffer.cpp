@@ -25,10 +25,7 @@ void VertexBuffer::Create() {
   std::memcpy(mem, Data.data(), Data.size() * sizeof(Vertex));
   VideoMem.Unmap();
 }
-bool VertexBuffer::Created() {
-  if (!this) return false;
-  return Buf != nullptr;
-}
+bool VertexBuffer::Created() { return Buf != nullptr; }
 void VertexBuffer::Release() {
   VideoMem.Release();
   vkDestroyBuffer(Dev.GetDevice(), Buf, nullptr);

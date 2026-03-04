@@ -30,9 +30,6 @@ unsigned int Device::FindPresentQueueID() {
   return PresentID;
 }
 
-unsigned int Device::GetPresentID() { return PresentID; }
-unsigned int Device::GetGraphicsID() { return CurrentQueueFamily; }
-
 void Device::Create() {
   VkDeviceQueueCreateInfo dqInfo{
       .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
@@ -68,13 +65,14 @@ void Device::Create() {
       .pNext = &pdv11Features,
       .features = {.geometryShader = true, .samplerAnisotropy = true}};
 
-  VkDeviceCreateInfo dcInfo{.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
-                            .flags = 0,
-                            .pNext = &features,
-                            .queueCreateInfoCount = 1,
-                            .pQueueCreateInfos = &dqInfo,
-                            .enabledExtensionCount = extensions.size(),
-                            .ppEnabledExtensionNames = extensions.data()};
+  VkDeviceCreateInfo dcInfo{
+      .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
+      .pNext = &features,
+      .flags = 0,
+      .queueCreateInfoCount = 1,
+      .pQueueCreateInfos = &dqInfo,
+      .enabledExtensionCount = static_cast<uint32_t>(extensions.size()),
+      .ppEnabledExtensionNames = extensions.data()};
 
   VkPhysicalDevice dev = PDev.GetDevice();
 

@@ -132,7 +132,7 @@ void Shader::RebuildPipeline() {
       .sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
       .pNext = 0,
       .flags = 0,
-      .dynamicStateCount = dynamicStates.size(),
+      .dynamicStateCount = static_cast<unsigned int>(dynamicStates.size()),
       .pDynamicStates = dynamicStates.data()};
 
   VkDescriptorSetLayoutBinding ubBinding{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
@@ -163,7 +163,7 @@ void Shader::RebuildPipeline() {
       .flags = 0,
       .setLayoutCount = 1,
       .pSetLayouts = &DescriptorSetLayout,
-      .pushConstantRangeCount = pushRange.size(),
+      .pushConstantRangeCount = static_cast<unsigned int>(pushRange.size()),
       .pPushConstantRanges = pushRange.data()};
   auto format = Swapch.GetCurrentFormat();
 

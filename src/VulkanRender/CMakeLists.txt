@@ -1,6 +1,8 @@
 find_package(Vulkan REQUIRED)
 
-add_library(VideoVk MODULE Entry.cpp)
+file(GLOB VulkanSources VulkanAPI/*.cpp)
+add_library(VideoVk MODULE Entry.cpp ${VulkanSources})
+target_include_directories(VideoVk PRIVATE VulkanAPI)
 
 generate_export_header(VideoVk
     EXPORT_FILE_NAME "${CMAKE_BINARY_DIR}/VideoVkExport.h"
