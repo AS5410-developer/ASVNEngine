@@ -7,8 +7,6 @@
 #include <Render/IShader.hpp>
 
 namespace AS::Engine {
-class ENGINE_EXPORT IShader;
-class ENGINE_EXPORT IImage;
 class ENGINE_EXPORT ISprite {
  public:
   virtual void SetImage(IImage& image) = 0;

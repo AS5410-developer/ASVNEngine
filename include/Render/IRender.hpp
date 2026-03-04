@@ -3,7 +3,6 @@
 
 #include <Base/IError.hpp>
 #include <Base/IModule.hpp>
-#include <Render/IFramebuffer.hpp>
 #include <Render/IImage.hpp>
 #include <Render/IShader.hpp>
 #include <Render/ISprite.hpp>
@@ -16,12 +15,9 @@ class ENGINE_EXPORT IRender : public IModule {
   virtual IImage* CreateImage() = 0;
   virtual ISprite* CreateSprite(IImage& image, IShader& shader,
                                 Transform& transform) = 0;
-  virtual IShader* CreateShader(const std::string& vertex,
-                                const std::string& fragment) = 0;
-  virtual IFramebuffer* CreateFramebuffer() = 0;
+  virtual IShader* CreateShader(const std::string& shader) = 0;
 
   virtual void DrawSprite(const ISprite& sprite) = 0;
-  virtual void DrawFramebuffer(const IFramebuffer& fbo) = 0;
 
   virtual ~IRender() = default;
 };

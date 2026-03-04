@@ -10,8 +10,9 @@
 namespace AS::Engine {
 class ENGINE_EXPORT IFileSystem : public IModule {
  public:
-  virtual const std::string& GetGamePath() const = 0;
-  virtual const std::string& GetExecutablePath() const = 0;
+  virtual const std::string GetGamePath() const = 0;
+  virtual const std::string GetExecutablePath() const = 0;
+  virtual const std::string GetBinPath() const = 0;
 
   virtual ~IFileSystem() = default;
 };
