@@ -8,6 +8,7 @@ VertexBuffer::VertexBuffer(Device& dev, std::vector<Vertex> data)
 }
 
 void VertexBuffer::Create() {
+  VkMemoryRequirements mr;
   VkBufferCreateInfo bcInfo{.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
                             .pNext = nullptr,
                             .flags = 0,
@@ -15,13 +16,14 @@ void VertexBuffer::Create() {
                             .usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
                             .sharingMode = VK_SHARING_MODE_EXCLUSIVE};
   vkCreateBuffer(Dev.GetDevice(), &bcInfo, nullptr, &Buf);
-  VideoMem = new VideoMemory(Dev, bcInfo.size, Buf->getMemoryRequirements(),
-                             vk::MemoryPropertyFlagBits::eHostVisible |
-                                 vk::MemoryPropertyFlagBits::eHostCoherent);
-  vkBindBufferMemory(Dev.GetDevice(), Buf, VideoMem->GetDeviceMemory(), 0);
-  void* mem = VideoMem->Map();
+  vkGetBufferMemoryRequirements(Dev.GetDevice(), Buf, &mr);
+  VideoMem = VideoMemory(Dev, mr.size, mr,
+                         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                             VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+  vkBindBufferMemory(Dev.GetDevice(), Buf, VideoMem.GetDeviceMemory(), 0);
+  void* mem = VideoMem.Map();
   std::memcpy(mem, Data.data(), Data.size() * sizeof(Vertex));
-  VideoMem->Unmap();
+  VideoMem.Unmap();
 }
 bool VertexBuffer::Created() {
   if (!this) return false;
