@@ -87,6 +87,9 @@ void Swapchain::Create() {
 
   count = 0;
   VkImageViewCreateInfo ivcInfo{
+      .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+      .pNext = 0,
+      .flags = 0,
       .viewType = VK_IMAGE_VIEW_TYPE_2D,
       .format = Format,
       .subresourceRange = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1}};
