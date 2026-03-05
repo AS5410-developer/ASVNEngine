@@ -80,7 +80,11 @@ void CommandBuffer::SetCurrentShader(Shader& shader) {
   vkCmdBindPipeline(Buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                     CurrentShader->GetPipeline());
 }
-void CommandBuffer::DrawVertexNotIndexedBuffer(VertexBuffer& buffer) {}
+void CommandBuffer::DrawVertexNotIndexedBuffer(VertexBuffer& buffer,
+                                               unsigned int id) {
+  vkCmdBindVertexBuffers(Buffer, 0, 1, &buffer.GetBuffer(), 0);
+  vkCmdDraw(Buffer, buffer.GetVertexCount(), 1, 0, id);
+}
 void CommandBuffer::EndDraw() {
   vkCmdEndRendering(Buffer);
   TransitionImageLayout(Buffer, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,

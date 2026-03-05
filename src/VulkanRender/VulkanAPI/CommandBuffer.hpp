@@ -25,7 +25,7 @@ class CommandBuffer final {
   }
   VkCommandBuffer StartSTCommands();
   void EndSTCommands(VkCommandBuffer& buffer);
-  void DrawVertexNotIndexedBuffer(VertexBuffer& buffer);
+  void DrawVertexNotIndexedBuffer(VertexBuffer& buffer, unsigned int id);
   void EndDraw();
   void TransitionImageLayout(
       VkCommandBuffer& buffer, VkPipelineStageFlags srcStageMask,

@@ -135,27 +135,20 @@ void Shader::RebuildPipeline() {
       .dynamicStateCount = static_cast<unsigned int>(dynamicStates.size()),
       .pDynamicStates = dynamicStates.data()};
 
-  VkDescriptorSetLayoutBinding ubBinding{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-                                         1, VK_SHADER_STAGE_VERTEX_BIT,
-                                         nullptr};
+  std::vector<VkDescriptorSetLayoutBinding> ubBinding{
+      {0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 8196, VK_SHADER_STAGE_ALL,
+       nullptr}};
+
   VkDescriptorSetLayoutCreateInfo layoutInfo{
       .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
       .pNext = 0,
-      .flags = 0,
-      .bindingCount = 1,
-      .pBindings = &ubBinding};
+      .flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT,
+      .bindingCount = static_cast<unsigned int>(ubBinding.size()),
+      .pBindings = ubBinding.data()};
   vkCreateDescriptorSetLayout(Dev.GetDevice(), &layoutInfo, 0,
                               &DescriptorSetLayout);
 
   std::vector<VkPushConstantRange> pushRange;
-  pushRange.push_back(
-      VkPushConstantRange{.stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
-                          .offset = 0,
-                          .size = sizeof(glm::mat4)});
-  pushRange.push_back(
-      VkPushConstantRange{.stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
-                          .offset = sizeof(glm::mat4),
-                          .size = sizeof(unsigned long long)});
 
   VkPipelineLayoutCreateInfo plInfo{
       .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
