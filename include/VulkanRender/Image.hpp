@@ -2,6 +2,7 @@
 #define INC_VULKANRENDER_IMAGE_HPP
 
 #include <Base/IError.hpp>
+#include <Image.hpp>
 #include <VulkanRender/Render.hpp>
 #include <string>
 
@@ -25,6 +26,7 @@ class Image : public IImage {
     Dev = dev;
     CBuffer = cbuffer;
   }
+  ::Image& GetImage() { return Img; }
 
   virtual ~Image() { Destroy(); }
 
@@ -33,9 +35,13 @@ class Image : public IImage {
   CommandBuffer CBuffer;
   std::string Path;
   bool Loaded = false;
-  unsigned int Width = 0;
-  unsigned int Height = 0;
+  int Width = 0;
+  int Height = 0;
   unsigned int Depth = 1;
+  char* Data = 0;
+  ::Image Img;
+  Device Dev;
+  CommandBuffer CBuffer;
 };
 }  // namespace AS::Engine
 

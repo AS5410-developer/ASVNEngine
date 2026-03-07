@@ -11,6 +11,7 @@
 #include <Swapchain.hpp>
 #include <VertexBuffer.hpp>
 #include <Vulkan.hpp>
+#include <VulkanRender/Sprite.hpp>
 
 namespace AS::Engine {
 class Render : public IRender {
