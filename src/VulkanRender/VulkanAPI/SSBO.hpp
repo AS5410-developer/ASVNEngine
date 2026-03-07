@@ -1,5 +1,5 @@
-#ifndef REF_VERTEXBUFFER_HPP
-#define REF_VERTEXBUFFER_HPP
+#ifndef REF_SSBO_HPP
+#define REF_SSBO_HPP
 
 #include "Shader.hpp"
 #include "Vulkan.hpp"

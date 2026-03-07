@@ -59,6 +59,10 @@ void Render::OnLoaded() {
                                          {{-1, -1}, {0, 0}},
                                          {{1, -1}, {1, 0}},
                                          {{1, 1}, {1, 1}}});
+
+  ShaderParams.resize(8196);
+  Buffer = SSBO(MainDevice, static_cast<uint32_t>(sizeof(ShaderData)),
+                ShaderParams.size());
 }
 void Render::OnRegisterOptions() {}
 void Render::OnUpdate() {}
@@ -69,7 +73,7 @@ void Render::OnDisabled() {}
 IImage* Render::CreateImage() { return new Image; }
 ISprite* Render::CreateSprite(IImage* image, IShader* shader,
                               Transform& transform) {
-  auto sprite = new Sprite;
+  auto sprite = new Sprite();
   sprite->SetImage(image);
   sprite->SetShader(shader);
   sprite->SetTransform(transform);
@@ -79,6 +83,7 @@ IShader* Render::CreateShader(const std::string& shader) {
   EShader* shaderObj = new EShader;
   shaderObj->SetInitData(MainDevice, MainSwapchain);
   shaderObj->SetShaderData(shader.c_str());
+  Buffer.BindToShader(*shaderObj->GetShader());
   return shaderObj;
 }
 
@@ -91,6 +96,7 @@ void Render::BindShader(IShader& shader) {
 void Render::DrawSprite(const ISprite* sprite) {
   if (!sprite) return;
   if (sprite->GetShader() != CurrentShader) BindShader(*sprite->GetShader());
-  MainCommandBuffer.DrawVertexNotIndexedBuffer(SpriteQuad);
+  MainCommandBuffer.DrawVertexNotIndexedBuffer(
+      SpriteQuad, dynamic_cast<const Sprite*>(sprite)->GetBufferID());
 }
 void Render::EndDraw() { MainCommandBuffer.EndDraw(); }

@@ -7,6 +7,7 @@
 #include <Engine/IEngine.hpp>
 #include <PhysicalDeviceManager.hpp>
 #include <Render/IRender.hpp>
+#include <SSBO.hpp>
 #include <Swapchain.hpp>
 #include <VertexBuffer.hpp>
 #include <Vulkan.hpp>
@@ -56,6 +57,8 @@ class Render : public IRender {
   Swapchain MainSwapchain;
   CommandBuffer MainCommandBuffer;
   VertexBuffer SpriteQuad;
+  SSBO Buffer;
+  std::vector<ShaderData> ShaderParams;
 };
 }  // namespace AS::Engine
 

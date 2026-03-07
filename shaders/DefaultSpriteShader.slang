@@ -13,7 +13,6 @@ struct Buffer {
   float4x4 Proj;
   float4x4 View;
   float4x4 Model;
-  uint TextureNum;
 };
 
 [vk_binding(0, 0)]

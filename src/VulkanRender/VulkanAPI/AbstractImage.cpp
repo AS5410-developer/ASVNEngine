@@ -28,7 +28,7 @@ void AbstractImage::CreateI(Device& dev, CommandBuffer& buffer,
                             .pNext = 0,
                             .flags = 0,
                             .size = req.size,
-                            .usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+                            .usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
                             .sharingMode = VK_SHARING_MODE_EXCLUSIVE};
   vkCreateBuffer(Dev.GetDevice(), &bcInfo, 0, &Buffer);
 

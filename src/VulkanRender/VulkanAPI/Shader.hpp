@@ -21,7 +21,7 @@ struct Vertex {
   float texCoord[2];
 };
 
-class Shader {
+class Shader final {
  public:
   Shader() {}
   Shader(Device dev, Swapchain swapchain, const char* filename,
