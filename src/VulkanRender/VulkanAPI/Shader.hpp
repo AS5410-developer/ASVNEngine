@@ -35,6 +35,7 @@ class Shader {
 
   VkPipeline& GetPipeline() { return Pipeline; }
   VkPipelineLayout& GetPipelineLayout() { return PipelineLayout; }
+  VkDescriptorSet& GetDescriptorSet() { return DescriptorSet; }
   VkDescriptorSetLayout& GetDescriptorSetLayout() {
     return DescriptorSetLayout;
   }
@@ -49,6 +50,8 @@ class Shader {
   VkPipelineLayout PipelineLayout = nullptr;
   VkShaderModule Module = nullptr;
   VkDescriptorSetLayout DescriptorSetLayout = nullptr;
+  VkDescriptorSet DescriptorSet = nullptr;
+  VkDescriptorPool DescriptorPool = nullptr;
   VkShaderModuleCreateInfo ShaderModuleInfo;
   VkCullModeFlags CullMode = VK_CULL_MODE_BACK_BIT;
   bool Blending = false;

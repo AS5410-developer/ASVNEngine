@@ -136,7 +136,8 @@ void Shader::RebuildPipeline() {
       .pDynamicStates = dynamicStates.data()};
 
   std::vector<VkDescriptorSetLayoutBinding> ubBinding{
-      {0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 8196, VK_SHADER_STAGE_ALL,
+      {0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_ALL, nullptr},
+      {1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_ALL,
        nullptr}};
 
   VkDescriptorSetLayoutCreateInfo layoutInfo{
@@ -147,6 +148,27 @@ void Shader::RebuildPipeline() {
       .pBindings = ubBinding.data()};
   vkCreateDescriptorSetLayout(Dev.GetDevice(), &layoutInfo, 0,
                               &DescriptorSetLayout);
+
+  std::array poolSize{
+      VkDescriptorPoolSize{VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1},
+      VkDescriptorPoolSize{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1}};
+  VkDescriptorPoolCreateInfo dpcInfo{
+      .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
+      .pNext = 0,
+      .flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT,
+      .poolSizeCount = 1,
+      .pPoolSizes = poolSize.data()};
+
+  vkCreateDescriptorPool(Dev.GetDevice(), &dpcInfo, nullptr, &DescriptorPool);
+
+  VkDescriptorSetAllocateInfo dsaInfo{
+      .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
+      .pNext = 0,
+      .descriptorPool = DescriptorPool,
+      .descriptorSetCount = 1,
+      .pSetLayouts = &DescriptorSetLayout};
+
+  vkAllocateDescriptorSets(Dev.GetDevice(), &dsaInfo, &DescriptorSet);
 
   std::vector<VkPushConstantRange> pushRange;
 
