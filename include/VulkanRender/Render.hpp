@@ -38,7 +38,7 @@ class Render : public IRender {
   virtual IShader* CreateShader(const std::string& shader) override;
 
   virtual void BeginDraw() override;
-  virtual void DrawSprite(const ISprite* sprite) override;
+  virtual void DrawSprite(ISprite* sprite) override;
   virtual void EndDraw() override;
 
   virtual void BindShader(IShader& shader) override;

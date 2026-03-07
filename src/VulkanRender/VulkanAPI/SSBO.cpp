@@ -41,8 +41,8 @@ void SSBO::BindToShader(Shader& shader) {
       .dstSet = shader.GetDescriptorSet(),
       .dstBinding = 0,
       .dstArrayElement = 0,
-      .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
       .descriptorCount = 1,
+      .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
       .pBufferInfo = &dbInfo};
   vkUpdateDescriptorSets(Dev.GetDevice(), 1, &wdSet, 0, 0);
 }

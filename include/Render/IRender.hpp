@@ -18,7 +18,7 @@ class ENGINE_EXPORT IRender : public IModule {
   virtual IShader* CreateShader(const std::string& shader) = 0;
 
   virtual void BeginDraw() = 0;
-  virtual void DrawSprite(const ISprite* sprite) = 0;
+  virtual void DrawSprite(ISprite* sprite) = 0;
   virtual void EndDraw() = 0;
 
   virtual void BindShader(IShader& shader) = 0;

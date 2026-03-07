@@ -13,8 +13,8 @@ class ENGINE_EXPORT ISprite {
   virtual void SetShader(IShader* shader) = 0;
   virtual void SetTransform(Transform& transform) = 0;
 
-  virtual IImage* GetImage() const = 0;
-  virtual IShader* GetShader() const = 0;
+  virtual IImage* GetImage() = 0;
+  virtual IShader* GetShader() = 0;
   virtual Transform& GetTransform() = 0;
 
   virtual void Destroy() = 0;

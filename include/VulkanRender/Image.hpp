@@ -3,13 +3,12 @@
 
 #include <Base/IError.hpp>
 #include <Image.hpp>
-#include <VulkanRender/Render.hpp>
 #include <string>
 
 namespace AS::Engine {
-class Image : public IImage {
+class EImage : public IImage {
  public:
-  Image() {}
+  EImage() {}
 
   virtual void SetPath(const std::string& path) override { Path = path; }
   virtual const std::string GetPath() override { return Path; }
@@ -28,7 +27,7 @@ class Image : public IImage {
   }
   ::Image& GetImage() { return Img; }
 
-  virtual ~Image() { Destroy(); }
+  virtual ~EImage() { Destroy(); }
 
  private:
   Device Dev;
@@ -40,8 +39,6 @@ class Image : public IImage {
   unsigned int Depth = 1;
   char* Data = 0;
   ::Image Img;
-  Device Dev;
-  CommandBuffer CBuffer;
 };
 }  // namespace AS::Engine
 

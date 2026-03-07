@@ -3,6 +3,8 @@
 
 #include <Engine/Transform.hpp>
 #include <Render/IRender.hpp>
+#include <VulkanRender/Image.hpp>
+#include <VulkanRender/Shader.hpp>
 
 namespace AS::Engine {
 struct ShaderData {
@@ -10,13 +12,15 @@ struct ShaderData {
   glm::mat4 View;
   glm::mat4 Model;
 };
+class EImage;
+class EShader;
 class Sprite : public ISprite {
  public:
   Sprite() {}
   Sprite(unsigned int id) : ID(id) {}
 
   virtual void SetImage(IImage* image) override {
-    Img = dynamic_cast<Image*>(image);
+    Img = dynamic_cast<EImage*>(image);
   }
   virtual void SetShader(IShader* shader) override {
     Shadr = dynamic_cast<EShader*>(shader);
@@ -25,8 +29,8 @@ class Sprite : public ISprite {
     Local = transform;
   }
 
-  virtual IImage* GetImage() const override { return Img; }
-  virtual IShader* GetShader() const override { return Shadr; }
+  virtual IImage* GetImage() override { return Img; }
+  virtual IShader* GetShader() override { return Shadr; }
   virtual Transform& GetTransform() override { return Local; }
 
   unsigned int GetBufferID() const { return ID; }
@@ -38,7 +42,7 @@ class Sprite : public ISprite {
   virtual ~Sprite() { Destroy(); }
 
  private:
-  Image* Img = 0;
+  EImage* Img = 0;
   EShader* Shadr = 0;
   Transform Local;
   unsigned int ID = 0;

@@ -1,9 +1,10 @@
 #include <webp/decode.h>
 
+#include <Base/ErrorSuccess.hpp>
 #include <VulkanRender/Image.hpp>
 #include <fstream>
 
-AS::Engine::IError* AS::Engine::Image::Precache() {
+AS::Engine::IError* AS::Engine::EImage::Precache() {
   std::ifstream image(Path, std::ios::ate | std::ios::binary);
   size_t fileSize = image.tellg();
   image.seekg(std::ios::beg);
@@ -22,12 +23,12 @@ AS::Engine::IError* AS::Engine::Image::Precache() {
 
   return new ErrorSuccess;
 }
-void AS::Engine::Image::Unload() {
+void AS::Engine::EImage::Unload() {
   if (Loaded) WebPFree(Data);
   Width = 0;
   Height = 0;
 }
-void AS::Engine::Image::Destroy() {
+void AS::Engine::EImage::Destroy() {
   if (Loaded) Unload();
   if (Img.GetImage()) Img.Release();
 }

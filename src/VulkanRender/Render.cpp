@@ -70,7 +70,7 @@ void Render::OnTick() {}
 void Render::OnEnabled() {}
 void Render::OnDisabled() {}
 
-IImage* Render::CreateImage() { return new Image; }
+IImage* Render::CreateImage() { return new EImage; }
 ISprite* Render::CreateSprite(IImage* image, IShader* shader,
                               Transform& transform) {
   auto sprite = new Sprite();
@@ -93,9 +93,10 @@ void Render::BindShader(IShader& shader) {
   MainCommandBuffer.SetCurrentShader(*sh.GetShader());
   CurrentShader = &shader;
 }
-void Render::DrawSprite(const ISprite* sprite) {
+void Render::DrawSprite(ISprite* sprite) {
   if (!sprite) return;
-  if (sprite->GetShader() != CurrentShader) BindShader(*sprite->GetShader());
+  auto sh = dynamic_cast<EShader*>(sprite->GetShader());
+  if (sh != CurrentShader) BindShader(*sh);
   MainCommandBuffer.DrawVertexNotIndexedBuffer(
       SpriteQuad, dynamic_cast<const Sprite*>(sprite)->GetBufferID());
 }

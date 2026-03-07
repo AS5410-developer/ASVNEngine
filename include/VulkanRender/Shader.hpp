@@ -1,7 +1,10 @@
 #ifndef INC_VULKANRENDER_SHADER_HPP
 #define INC_VULKANRENDER_SHADER_HPP
 
-#include <VulkanRender/Render.hpp>
+#include <Device.hpp>
+#include <Render/IRender.hpp>
+#include <Shader.hpp>
+#include <Swapchain.hpp>
 
 namespace AS::Engine {
 class EShader : public IShader {
