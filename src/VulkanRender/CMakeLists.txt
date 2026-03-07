@@ -1,4 +1,5 @@
 find_package(Vulkan REQUIRED)
+find_package(WebP REQUIRED)
 
 file(GLOB VulkanSources VulkanAPI/*.cpp)
 add_library(VideoVk MODULE Entry.cpp ${VulkanSources} Render.cpp Shader.cpp Image.cpp)
@@ -9,4 +10,4 @@ generate_export_header(VideoVk
     BASE_NAME VIDEO_VK 
 )
 
-target_link_libraries(VideoVk PRIVATE Vulkan::Vulkan)
+target_link_libraries(VideoVk PRIVATE Vulkan::Vulkan WebP::webp)
