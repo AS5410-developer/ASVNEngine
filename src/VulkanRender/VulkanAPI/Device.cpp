@@ -8,7 +8,9 @@ Device::Device(PhysicalDevice pdev, unsigned int queueFamily,
 
 unsigned int Device::FindPresentQueueID() {
   unsigned int PresentID = CurrentQueueFamily;
-  VkBool32 supported = false;
+  VkBool32 supported = 0;
+  assert(PDev.GetDevice() != VK_NULL_HANDLE);
+  assert(Surface != VK_NULL_HANDLE);
   vkGetPhysicalDeviceSurfaceSupportKHR(PDev.GetDevice(), CurrentQueueFamily,
                                        Surface, &supported);
   if (!supported) {

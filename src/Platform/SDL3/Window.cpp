@@ -1,3 +1,5 @@
+#include <SDL3/SDL_vulkan.h>
+
 #include <Platform/SDL3/Window.hpp>
 
 using namespace AS::Engine;
@@ -20,14 +22,18 @@ void Window::SetTitle(const char* title) {
   Title = title;
 }
 
-ResultOrError<void*> Window::GetSurface() {
+ResultOrError<void*> Window::GetSurface(void* instance) {
   if (!window) return ResultOrError<void*>(0, "Window = 0", true);
   if (Flag != AS_ENGINE_IWINDOW_SURFACETYPE_VULKAN)
     return ResultOrError<void*>(0,
                                 "You trying get surface for OPENGL??? Are you "
                                 "serious??? This is only vulkan function!!!",
                                 true);
-  return SDL_GetWindowSurface(window);
+  if (!instance) return ResultOrError<void*>(0, "Why instance is 0?", true);
+  VkSurfaceKHR surface = 0;
+  SDL_Vulkan_CreateSurface(window, reinterpret_cast<VkInstance>(instance), 0,
+                           &surface);
+  return surface;
 }
 
 void Window::Update() {

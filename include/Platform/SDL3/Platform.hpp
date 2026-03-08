@@ -27,6 +27,8 @@ class Platform : public IPlatform {
   virtual void SetCursorState(bool hide = false) override;
   virtual CursorCoords GetCursorCoords() override;
 
+  virtual std::vector<char*> GetExtensions() override;
+
   virtual ~Platform() = default;
 
  private:

@@ -22,7 +22,7 @@ class Window : public IWindow {
   virtual void SetTitle(const char* title) override;
 
   virtual WindowSize GetSize() const override { return Size; }
-  virtual ResultOrError<void*> GetSurface() override;
+  virtual ResultOrError<void*> GetSurface(void* instance) override;
   virtual unsigned long long GetSurfaceType() override { return Flag; }
   virtual bool GetFullscreen() override { return Fullscreen; }
   virtual const char* GetTitle() override { return Title; }

@@ -4,14 +4,24 @@
 #include <VulkanRender/Sprite.hpp>
 using namespace AS::Engine;
 
+IEngine* Render::EngineInstance = 0;
+AS::Engine::IEngine* MainEngine = 0;
+VkInstance MainInstance = 0;
+
 void Render::OnLoaded() {
+  MainEngine = EngineInstance;
+
   std::vector<char*> layers;
   std::vector<char*> extensions;
 #ifdef _DEBUG
   layers.push_back("VK_LAYER_KHRONOS_validation");
 #endif
   extensions.push_back(const_cast<char*>(VK_KHR_SURFACE_EXTENSION_NAME));
-  extensions.push_back(const_cast<char*>(VK_KHR_SWAPCHAIN_EXTENSION_NAME));
+  extensions.push_back(const_cast<char*>(VK_EXT_DEBUG_UTILS_EXTENSION_NAME));
+
+  auto exts = EngineInstance->GetPlatform().GetExtensions();
+
+  extensions.insert(extensions.end(), exts.begin(), exts.end());
 
   constexpr VkApplicationInfo aInfo{
       .sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
@@ -35,10 +45,16 @@ void Render::OnLoaded() {
   };
   vkCreateInstance(&icInfo, nullptr, &MainInstance);
 
+  if (!MainInstance) {
+    EngineInstance->GetConsole()
+        << "Error on creating vulkan instance!" << EndLine;
+    return;
+  }
+
   PhysicalDeviceManager devManager = PhysicalDeviceManager::Create();
   MainPhysicalDevice = devManager.GetBestPhysicalDevice();
 
-  auto surf = MainEngine->GetMainWindow()->GetSurface();
+  auto surf = MainEngine->GetMainWindow()->GetSurface(MainInstance);
   if (surf.Failed()) {
     MainEngine->GetConsole()
         << "Failed to get surface from main window: " << surf.What() << EndLine;

@@ -22,7 +22,7 @@ class ENGINE_EXPORT IWindow {
   virtual void SetTitle(const char* title) = 0;
 
   virtual WindowSize GetSize() const = 0;
-  virtual ResultOrError<void*> GetSurface() = 0;
+  virtual ResultOrError<void*> GetSurface(void* instance) = 0;
   virtual unsigned long long GetSurfaceType() = 0;
   virtual bool GetFullscreen() = 0;
   virtual const char* GetTitle() = 0;

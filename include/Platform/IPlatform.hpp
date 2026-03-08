@@ -17,6 +17,8 @@ class ENGINE_EXPORT IPlatform : public IModule {
   virtual void SetCursorState(bool hide = false) = 0;
   virtual CursorCoords GetCursorCoords() = 0;
 
+  virtual std::vector<char*> GetExtensions() = 0;
+
   virtual ~IPlatform() = default;
 };
 }  // namespace AS::Engine

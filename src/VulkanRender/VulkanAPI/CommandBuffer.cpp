@@ -10,12 +10,14 @@ CommandBuffer::CommandBuffer(CommandPool& pool, Swapchain& swapchain)
       .commandBufferCount = 1};
   vkAllocateCommandBuffers(Pool.GetDevice().GetDevice(), &cbaInfo, &Buffer);
 
+  const VkSemaphoreCreateInfo scInfo{
+      .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO, .pNext = 0, .flags = 0};
   VkFenceCreateInfo fcInfo{.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
                            .pNext = 0,
                            .flags = VK_FENCE_CREATE_SIGNALED_BIT};
 
-  vkCreateSemaphore(Pool.GetDevice().GetDevice(), 0, 0, &Present);
-  vkCreateSemaphore(Pool.GetDevice().GetDevice(), 0, 0, &Render);
+  vkCreateSemaphore(Pool.GetDevice().GetDevice(), &scInfo, 0, &Present);
+  vkCreateSemaphore(Pool.GetDevice().GetDevice(), &scInfo, 0, &Render);
   vkCreateFence(Pool.GetDevice().GetDevice(), &fcInfo, 0, &Draw);
 }
 
