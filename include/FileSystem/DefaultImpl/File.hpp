@@ -2,11 +2,12 @@
 #define INC_FILESYSTEM_DEFAULT_IMPL_FILE_HPP
 
 #include <FileSystem/DefaultImpl/FileSystem.hpp>
+#include <fstream>
 
 namespace AS::Engine {
 class File : public IFile {
  public:
-  File(FileSystem& fs) : Instance(fs) {}
+  File() {}
   virtual const IError& Open(const char* path, unsigned long flags) override;
 
   virtual ResultOrError<unsigned long> GetFileSize() override {
@@ -15,8 +16,7 @@ class File : public IFile {
   }
 
   virtual ResultOrError<char*> ReadAll() override;
-  virtual ResultOrError<char*> ReadAllFromCurrentPos(
-      unsigned long size) override;
+  virtual ResultOrError<char*> ReadAllFromCurrentPos() override;
   virtual ResultOrError<char*> ReadFromCurrentPos(unsigned long size) override;
   virtual ResultOrError<char*> Read(unsigned long size) override;
 
@@ -28,11 +28,14 @@ class File : public IFile {
   virtual IError* WriteFromStart(unsigned long size, const char* data) override;
 
   virtual void Close() override;
+  static void SetInstance(FileSystem& inst) { Instance = inst; }
 
   virtual ~File() = default;
 
  private:
-  FileSystem Instance;
+  static FileSystem Instance;
+  std::ifstream Input;
+  std::ofstream Output;
   bool Opened = false;
   unsigned long FileSize = 0;
   unsigned long CurrentPos = 0;

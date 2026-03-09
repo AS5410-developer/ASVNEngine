@@ -17,7 +17,7 @@ class ENGINE_EXPORT IFile {
   virtual ResultOrError<unsigned long> GetFileSize() = 0;
 
   virtual ResultOrError<char*> ReadAll() = 0;
-  virtual ResultOrError<char*> ReadAllFromCurrentPos(unsigned long size) = 0;
+  virtual ResultOrError<char*> ReadAllFromCurrentPos() = 0;
   virtual ResultOrError<char*> ReadFromCurrentPos(unsigned long size) = 0;
   virtual ResultOrError<char*> Read(unsigned long size) = 0;
 
