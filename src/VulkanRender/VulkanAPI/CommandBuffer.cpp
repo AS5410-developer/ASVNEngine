@@ -54,7 +54,7 @@ void CommandBuffer::StartDraw() {
       .imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
       .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
       .storeOp = VK_ATTACHMENT_STORE_OP_STORE,
-      .clearValue = {0.0f, 0.0f, 1.0f, 1.0f}};
+      .clearValue = {0.0f, 0.0f, 0.0f, 1.0f}};
 
   VkRenderingInfo rInfo{
       .sType = VK_STRUCTURE_TYPE_RENDERING_INFO,

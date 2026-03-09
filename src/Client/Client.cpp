@@ -21,7 +21,7 @@ void Client::OnLoaded() {
   Transform pos;
   pos.SetPosition(glm::vec2(0, 0));
   pos.SetRotation(0);
-  pos.SetScale(glm::vec2(1, 1));
+  pos.SetScale(glm::vec2(img->GetWidth() / (float)img->GetHeight(), 1));
   sprite = render->CreateSprite(img, shad, pos);
 
   std::thread windowThread(&Client::WindowThread, this);

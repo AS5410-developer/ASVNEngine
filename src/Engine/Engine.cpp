@@ -84,8 +84,6 @@ void Engine::OnTick() {
       if (!Modules.contains(i)) continue;
       if (Modules[i].Activated) Modules[i].Module->OnTick();
     }
-    ConsoleInstance << "Tickrate: " << TickInSecond << " "
-                    << "Tick: " << CurrentTime << EndLine;
     ++CurrentTime;
 
     endTime = EndTick();

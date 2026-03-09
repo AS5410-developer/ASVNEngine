@@ -75,7 +75,7 @@ class ENGINE_EXPORT Engine final : public IEngine {
 
   std::map<ModuleID, ModuleInfo> Modules;
   Tick CurrentTime;
-  Tick TickInSecond = 20;
+  Tick TickInSecond = 128;
   bool ServerFlag;
   bool Singleplayer;
   IClient* ClientInstance;
