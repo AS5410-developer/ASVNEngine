@@ -31,6 +31,8 @@ void Engine::OnLoaded() {
   FilesystemInstance =
       dynamic_cast<IFileSystem*>(GetModuleInfo(result.GetResult())->Module);
 
+  FilesystemInstance->SetupGamePath("example");
+
   ConsoleInstance = Console(this);
 
   if (!IsServer()) {

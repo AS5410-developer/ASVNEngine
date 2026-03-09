@@ -24,7 +24,7 @@ class FileSystem : public IFileSystem {
   virtual char* GetBinPath() const override { return BinPath; }
 
   virtual void SetupGamePath(const char* gameDir) override;
-  std::string GetPath(const char* path, unsigned long pathType);
+  char* GetPath(const char* path, unsigned long pathType);
 
   virtual IFile* CreateFile() override;
   virtual bool FileExists(const char* path, unsigned long pathType) override;

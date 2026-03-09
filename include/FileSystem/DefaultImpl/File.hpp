@@ -28,12 +28,12 @@ class File : public IFile {
   virtual IError* WriteFromStart(unsigned long size, const char* data) override;
 
   virtual void Close() override;
-  static void SetInstance(FileSystem& inst) { Instance = inst; }
+  static void SetInstance(FileSystem* inst) { Instance = inst; }
 
   virtual ~File() = default;
 
  private:
-  static FileSystem Instance;
+  static FileSystem* Instance;
   std::ifstream Input;
   std::ofstream Output;
   bool Opened = false;

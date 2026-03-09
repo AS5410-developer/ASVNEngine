@@ -15,7 +15,7 @@ void Client::OnLoaded() {
 
   render = EngineInstance->GetRender();
   IImage* img = render->CreateImage();
-  img->SetPath("test.webp");
+  img->SetPath("image/test.webp");
   img->Precache();
   IShader* shad = render->CreateShader("Default.spv");
   Transform pos;

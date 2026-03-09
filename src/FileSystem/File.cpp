@@ -3,7 +3,7 @@
 #include <FileSystem/DefaultImpl/File.hpp>
 
 using namespace AS::Engine;
-FileSystem File::Instance;
+FileSystem* File::Instance = 0;
 
 const IError& File::Open(const char* path, unsigned long flags) {
   std::ios_base::openmode add;
@@ -11,13 +11,14 @@ const IError& File::Open(const char* path, unsigned long flags) {
     add |= std::ios::binary;
   }
   if (flags & AS_ENGINE_FILE_SYSTEM_WRITE) {
-    Output = std::ofstream(Instance.GetPath(path, flags), add | std::ios::ate);
+    Output = std::ofstream(Instance->GetPath(path, flags), add | std::ios::ate);
     if (!Output.is_open()) return ErrorFileSystem("Error while opening file!");
     FileSize = Output.tellp();
     Output.seekp(std::ios::beg);
   }
   if (flags & AS_ENGINE_FILE_SYSTEM_READ) {
-    Input = std::ifstream(Instance.GetPath(path, flags), add | std::ios::ate);
+    auto pat = Instance->GetPath(path, flags);
+    Input = std::ifstream(pat, add | std::ios::ate);
     if (!Input.is_open()) return ErrorFileSystem("Error while opening file!");
     FileSize = Input.tellg();
     Input.seekg(std::ios::beg);

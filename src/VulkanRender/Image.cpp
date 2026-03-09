@@ -1,21 +1,25 @@
 #include <webp/decode.h>
 
 #include <Base/ErrorSuccess.hpp>
+#include <Base/FileSystemError.hpp>
 #include <VulkanRender/Image.hpp>
 #include <fstream>
 
 AS::Engine::IError* AS::Engine::EImage::Precache() {
-  std::ifstream image(Path, std::ios::ate | std::ios::binary);
-  size_t fileSize = image.tellg();
-  image.seekg(std::ios::beg);
-  char* fileData = new char[fileSize];
-  image.read(fileData, fileSize);
-  image.close();
+  auto file = MainEngine->GetFileSystem().CreateFile();
+  auto& err = file->Open(Path.c_str(), AS_ENGINE_FILE_SYSTEM_GAMEDIR |
+                                           AS_ENGINE_FILE_SYSTEM_RAW |
+                                           AS_ENGINE_FILE_SYSTEM_READ);
+  if (err.Failed()) return new ErrorFileSystem(err.What());
+  auto size = file->GetFileSize();
+  auto result = file->ReadAll();
+  file->Close();
+  if (result.Failed()) return new ErrorFileSystem(result.What());
 
   Data = reinterpret_cast<char*>(WebPDecodeRGBA(
-      reinterpret_cast<uint8_t*>(fileData), fileSize, &Width, &Height));
+      reinterpret_cast<uint8_t*>(result.GetResult()), size, &Width, &Height));
 
-  delete[] fileData;
+  delete[] result.GetResult();
   Loaded = true;
   Depth = 4;
 
