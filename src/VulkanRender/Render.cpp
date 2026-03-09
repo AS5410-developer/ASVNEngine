@@ -14,12 +14,10 @@ void Render::OnLoaded() {
 
   std::vector<char*> layers;
   std::vector<char*> extensions;
-  // #ifdef _DEBUG
+#ifdef DEBUG
   layers.push_back("VK_LAYER_KHRONOS_validation");
-  // #endif
-  // extensions.push_back(const_cast<char*>(VK_KHR_SURFACE_EXTENSION_NAME));
   extensions.push_back(const_cast<char*>(VK_EXT_DEBUG_UTILS_EXTENSION_NAME));
-
+#endif
   auto exts = EngineInstance->GetPlatform().GetExtensions();
 
   extensions.insert(extensions.end(), exts.begin(), exts.end());
