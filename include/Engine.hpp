@@ -43,6 +43,7 @@ class ENGINE_EXPORT Engine final : public IEngine {
   virtual IClient* GetClient() override { return ClientInstance; }
   virtual IRender* GetRender() override { return RenderInstance; }
   virtual IPlatform& GetPlatform() override { return *PlatformInstance; }
+  virtual IFileSystem& GetFileSystem() override { return *FilesystemInstance; }
 
   virtual WindowSize GetWindowSize() const override {
     return MainWindow->GetSize();
@@ -81,6 +82,7 @@ class ENGINE_EXPORT Engine final : public IEngine {
   IClient* ClientInstance;
   IRender* RenderInstance;
   IPlatform* PlatformInstance;
+  IFileSystem* FilesystemInstance;
   IWindow* MainWindow = 0;
   Console ConsoleInstance;
   ILauncher* LauncherInstance;

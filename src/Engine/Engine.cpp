@@ -23,6 +23,14 @@ void Engine::OnLoaded() {
   PlatformInstance =
       dynamic_cast<IPlatform*>(GetModuleInfo(result.GetResult())->Module);
 
+  result = LoadModule("libFileSystem.so");
+  if (result.Failed()) {
+    QuitOnError(result);
+    return;
+  }
+  FilesystemInstance =
+      dynamic_cast<IFileSystem*>(GetModuleInfo(result.GetResult())->Module);
+
   ConsoleInstance = Console(this);
 
   if (!IsServer()) {

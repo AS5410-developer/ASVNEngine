@@ -1,10 +1,10 @@
-#include <dlfcn.h>
 
 #include <iostream>
 
 typedef void (*LaunchFunc)(int argc, char** argv);
 
 #ifdef __linux__
+#include <dlfcn.h>
 int LoadLauncher(int argc, char** argv) {
   void* Lib = dlopen("./bin/libLauncher.so", RTLD_NOW | RTLD_GLOBAL);
   if (!Lib) {

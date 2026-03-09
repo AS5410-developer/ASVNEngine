@@ -9,6 +9,7 @@
 #include <Base/Types.hpp>
 #include <Client/IClient.hpp>
 #include <Engine/IConsole.hpp>
+#include <FileSystem/IFileSystem.hpp>
 #include <Launcher/ILauncher.hpp>
 #include <Platform/IPlatform.hpp>
 #include <Render/IRender.hpp>
@@ -48,6 +49,7 @@ class ENGINE_EXPORT IEngine : public IModule {
   virtual IClient* GetClient() = 0;
   virtual IRender* GetRender() = 0;
   virtual IPlatform& GetPlatform() = 0;
+  virtual IFileSystem& GetFileSystem() = 0;
 
   virtual WindowSize GetWindowSize() const = 0;
   virtual IWindow* GetMainWindow() const = 0;
