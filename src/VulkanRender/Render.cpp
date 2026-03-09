@@ -58,8 +58,6 @@ void Render::OnLoaded() {
 
   PhysicalDeviceManager devManager = PhysicalDeviceManager::Create();
   MainPhysicalDevice = devManager.GetBestPhysicalDevice();
-  if (MainPhysicalDevice.GetDevice())
-    MainEngine->GetConsole() << "Phys Dev not null" << EndLine;
 
   auto surf = MainEngine->GetMainWindow()->GetSurface(MainInstance);
   if (surf.Failed()) {
