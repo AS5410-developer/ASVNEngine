@@ -36,7 +36,7 @@ class EImage : public IImage {
   bool Loaded = false;
   int Width = 0;
   int Height = 0;
-  unsigned int Depth = 1;
+  unsigned int Depth = 4;
   char* Data = 0;
   ::Image Img;
 };

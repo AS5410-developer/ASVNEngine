@@ -1,16 +1,18 @@
 #include <SDL3/SDL_vulkan.h>
 
+#include <Platform/SDL3/Platform.hpp>
 #include <Platform/SDL3/Window.hpp>
 
 using namespace AS::Engine;
 
 void Window::Initialize() {
   window = SDL_CreateWindow(Title, Size.x, Size.y, Flag | SDL_WINDOW_RESIZABLE);
+  SDL_ShowWindow(window);
 }
 
 void Window::SetSize(const WindowSize& size) {
-  if (!window) return;
   Size = size;
+  if (!window) return;
   SDL_SetWindowSize(window, size.x, size.y);
 }
 void Window::SetFullscreen(bool isItTrue) {
@@ -43,12 +45,12 @@ void Window::Update() {
     switch (e.type) {
       case SDL_EVENT_QUIT:
         Destroy();
+        Platform::GetEngine()->Quit();
         break;
-      case SDL_EVENT_WINDOW_RESIZED:
+      case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
         int x, y;
-        SDL_GetWindowSize(window, &x, &y);
-        Size.x = x;
-        Size.y = y;
+        Size.x = e.window.data1;
+        Size.y = e.window.data2;
         break;
       default:
         break;

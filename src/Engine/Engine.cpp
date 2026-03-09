@@ -26,25 +26,17 @@ void Engine::OnLoaded() {
   ConsoleInstance = Console(this);
 
   if (!IsServer()) {
-    result = LoadModule("libClient.so");
-    if (result.Failed()) {
-      QuitOnError(result);
-      return;
-    }
-    ClientInstance =
-        dynamic_cast<IClient*>(GetModuleInfo(result.GetResult())->Module);
-
     auto wind = PlatformInstance->CreateWindow();
     if (wind.Failed()) {
       QuitOnError(wind);
       return;
     }
     MainWindow = wind.GetResult();
-    MainWindow->SetSize({600, 600});
+    MainWindow->SetSize({800, 800});
     MainWindow->SetTitle("AS 2D Engine");
     MainWindow->SetSurfaceType(AS_ENGINE_IWINDOW_SURFACETYPE_VULKAN);
     MainWindow->Initialize();
-    MainWindow->SetFullscreen(true);
+    MainWindow->SetFullscreen(false);
 
     result = LoadModule("libVideoVk.so");
     if (result.Failed()) {
@@ -53,6 +45,14 @@ void Engine::OnLoaded() {
     }
     RenderInstance =
         dynamic_cast<IRender*>(GetModuleInfo(result.GetResult())->Module);
+
+    result = LoadModule("libClient.so");
+    if (result.Failed()) {
+      QuitOnError(result);
+      return;
+    }
+    ClientInstance =
+        dynamic_cast<IClient*>(GetModuleInfo(result.GetResult())->Module);
   }
 
   std::thread tickThread([&]() { OnTick(); });

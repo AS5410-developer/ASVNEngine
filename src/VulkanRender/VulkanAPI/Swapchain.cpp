@@ -49,6 +49,7 @@ void Swapchain::Create() {
   VkSurfaceCapabilitiesKHR caps;
   vkGetPhysicalDeviceSurfaceCapabilitiesKHR(Dev.GetPhysicalDevice().GetDevice(),
                                             Surface, &caps);
+  CurrentSize = GetSize();
 
   VkSwapchainCreateInfoKHR swInfo{
       .sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
@@ -61,7 +62,7 @@ void Swapchain::Create() {
               : caps.minImageCount,
       .imageFormat = Format,
       .imageColorSpace = ColorSpace,
-      .imageExtent = GetSize(),
+      .imageExtent = GetCurrentSize(),
       .imageArrayLayers = 1,
       .imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
       .imageSharingMode = VK_SHARING_MODE_EXCLUSIVE,
@@ -82,7 +83,8 @@ void Swapchain::Create() {
   vkCreateSwapchainKHR(Dev.GetDevice(), &swInfo, 0, &Swapch);
 
   vkGetSwapchainImagesKHR(Dev.GetDevice(), Swapch, &count, 0);
-  Images.reserve(count);
+  Images.resize(count);
+  ImageViews.resize(count);
   vkGetSwapchainImagesKHR(Dev.GetDevice(), Swapch, &count, Images.data());
 
   count = 0;
@@ -101,7 +103,7 @@ void Swapchain::Create() {
 }
 
 unsigned int Swapchain::NextImage(VkSemaphore& PresentSemaphore) {
-  unsigned int id;
+  unsigned int id = 0;
   vkAcquireNextImageKHR(Dev.GetDevice(), Swapch, UINT64_MAX, PresentSemaphore,
                         0, &id);
   return id;

@@ -7,7 +7,12 @@ Shader::Shader(Device dev, Swapchain swapchain, const char* filename,
     : Dev(dev), Swapch(swapchain), CullMode(cullMode) {
   std::ifstream file(SHADER_MOD_LOCATION + std::string(filename),
                      std::ios::ate | std::ios::binary);
-  if (!file.is_open()) return;
+  if (!file.is_open()) {
+    MainEngine->GetConsole()
+        << "Failed to open file: " << SHADER_MOD_LOCATION << filename
+        << "\nReason: " << std::strerror(errno) << AS::Engine::EndLine;
+    return;
+  }
   unsigned int Size = file.tellg();
   char* Data = new char[Size];
   file.seekg(0);
@@ -50,7 +55,7 @@ void Shader::RebuildPipeline() {
   VkVertexInputAttributeDescription viaDesc[] = {
       {.location = 0,
        .binding = 0,
-       .format = VK_FORMAT_R32G32B32_SFLOAT,
+       .format = VK_FORMAT_R32G32_SFLOAT,
        .offset = offsetof(Vertex, pos)},
       {.location = 1,
        .binding = 0,
@@ -69,7 +74,7 @@ void Shader::RebuildPipeline() {
       .flags = 0,
       .vertexBindingDescriptionCount = 1,
       .pVertexBindingDescriptions = &vibDesc,
-      .vertexAttributeDescriptionCount = 3,
+      .vertexAttributeDescriptionCount = 2,
       .pVertexAttributeDescriptions = viaDesc};
   VkPipelineInputAssemblyStateCreateInfo piascInfo{
       .sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
@@ -155,8 +160,10 @@ void Shader::RebuildPipeline() {
   VkDescriptorPoolCreateInfo dpcInfo{
       .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
       .pNext = 0,
-      .flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT,
-      .poolSizeCount = 1,
+      .flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT |
+               VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT,
+      .maxSets = 1,
+      .poolSizeCount = static_cast<unsigned int>(poolSize.size()),
       .pPoolSizes = poolSize.data()};
 
   vkCreateDescriptorPool(Dev.GetDevice(), &dpcInfo, nullptr, &DescriptorPool);

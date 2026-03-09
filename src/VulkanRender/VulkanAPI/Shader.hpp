@@ -54,7 +54,7 @@ class Shader final {
   VkDescriptorPool DescriptorPool = nullptr;
   VkShaderModuleCreateInfo ShaderModuleInfo;
   VkCullModeFlags CullMode = VK_CULL_MODE_BACK_BIT;
-  bool Blending = false;
+  bool Blending = true;
   Swapchain Swapch = 0;
   Device Dev = 0;
 };

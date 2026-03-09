@@ -17,7 +17,8 @@ AS::Engine::IError* AS::Engine::EImage::Precache() {
 
   delete[] fileData;
   Loaded = true;
-  Depth = 1;
+  Depth = 4;
+  if (!Dev.GetDevice()) MainEngine->GetConsole() << "Fucking shit" << EndLine;
 
   Img = ::Image(Dev, CBuffer, Width, Height, Depth, Data);
 

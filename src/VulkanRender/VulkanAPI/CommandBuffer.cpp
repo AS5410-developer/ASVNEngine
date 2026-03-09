@@ -40,25 +40,27 @@ void CommandBuffer::StartDraw() {
       .flags = 0};
   vkBeginCommandBuffer(Buffer, &cbbInfo);
 
-  TransitionImageLayout(
-      Buffer, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-      VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, {},
-      VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, VK_IMAGE_LAYOUT_UNDEFINED,
-      VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, Swapch.GetImage(SwapchID));
+  auto image = Swapch.GetImage(SwapchID);
+
+  TransitionImageLayout(Buffer, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+                        VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, {},
+                        VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+                        VK_IMAGE_LAYOUT_UNDEFINED,
+                        VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, image);
   VkRenderingAttachmentInfo raInfo{
       .sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
       .pNext = 0,
       .imageView = Swapch.GetImageView(SwapchID),
-      .imageLayout = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL,
+      .imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
       .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
       .storeOp = VK_ATTACHMENT_STORE_OP_STORE,
-      .clearValue = {0.0f, 0.0f, 0.0f, 1.0f}};
+      .clearValue = {0.0f, 0.0f, 1.0f, 1.0f}};
 
   VkRenderingInfo rInfo{
       .sType = VK_STRUCTURE_TYPE_RENDERING_INFO,
       .pNext = 0,
       .flags = 0,
-      .renderArea = {.offset = {0, 0}, .extent = Swapch.GetSize()},
+      .renderArea = {.offset = {0, 0}, .extent = Swapch.GetCurrentSize()},
       .layerCount = 1,
       .colorAttachmentCount = 1,
       .pColorAttachments = &raInfo};
@@ -84,7 +86,11 @@ void CommandBuffer::SetCurrentShader(Shader& shader) {
 }
 void CommandBuffer::DrawVertexNotIndexedBuffer(VertexBuffer& buffer,
                                                unsigned int id) {
-  vkCmdBindVertexBuffers(Buffer, 0, 1, &buffer.GetBuffer(), 0);
+  VkDeviceSize offset = 0;
+  vkCmdBindDescriptorSets(Buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                          CurrentShader->GetPipelineLayout(), 0, 1,
+                          &CurrentShader->GetDescriptorSet(), 0, 0);
+  vkCmdBindVertexBuffers(Buffer, 0, 1, &buffer.GetBuffer(), &offset);
   vkCmdDraw(Buffer, buffer.GetVertexCount(), 1, 0, id);
 }
 void CommandBuffer::EndDraw() {
@@ -111,11 +117,14 @@ void CommandBuffer::EndDraw() {
                                 .pSignalSemaphores = &Render};
   vkQueueSubmit(Pool.GetDevice().GetGraphicsQueue(), 1, &submitInfo, Draw);
 
-  const VkPresentInfoKHR presentInfoKHR{.waitSemaphoreCount = 1,
-                                        .pWaitSemaphores = &Render,
-                                        .swapchainCount = 1,
-                                        .pSwapchains = &Swapch.GetSwapchain(),
-                                        .pImageIndices = &SwapchID};
+  const VkPresentInfoKHR presentInfoKHR{
+      .sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
+      .pNext = 0,
+      .waitSemaphoreCount = 1,
+      .pWaitSemaphores = &Render,
+      .swapchainCount = 1,
+      .pSwapchains = &Swapch.GetSwapchain(),
+      .pImageIndices = &SwapchID};
   vkQueuePresentKHR(Pool.GetDevice().GetPresentQueue(), &presentInfoKHR);
 }
 void CommandBuffer::TransitionImageLayout(

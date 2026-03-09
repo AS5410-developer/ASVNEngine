@@ -22,9 +22,10 @@ glm::vec2 Transform::GetAbsoluteScale() const {
 }
 
 glm::mat4x4 Transform::GetTransformMatrix() const {
-  glm::mat4x4 transform;
+  glm::mat4x4 transform(1);
   transform = glm::translate(transform, glm::vec3(Position, 0));
-  transform = glm::rotate(transform, Rotation, glm::vec3(1, 0, 0));
+  transform =
+      glm::rotate(transform, glm::radians(Rotation), glm::vec3(0, 0, 1));
   transform = glm::scale(transform, glm::vec3(Scale, 1));
   return transform;
 }

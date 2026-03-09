@@ -27,6 +27,7 @@ class Swapchain final {
   unsigned int NextImage(VkSemaphore& PresentSemaphore);
 
   VkExtent2D GetSize();
+  VkExtent2D GetCurrentSize() { return CurrentSize; }
 
   void Release();
 
@@ -38,6 +39,7 @@ class Swapchain final {
   VkSurfaceKHR Surface = nullptr;
 
   VkFormat Format;
+  VkExtent2D CurrentSize;
   VkColorSpaceKHR ColorSpace;
   VkPresentModeKHR PresentMode;
   std::vector<VkImage> Images;

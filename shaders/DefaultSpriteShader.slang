@@ -17,14 +17,14 @@ struct Buffer {
 
 [vk_binding(0, 0)]
 StructuredBuffer<Buffer> Data;
-[vk_binding(0, 1)]
+[vk_binding(1, 0)]
 Sampler2D Texture;
 
 [shader("vertex")]
 VertexOutput VertexMain(VertexInput in, uint instanceID: SV_InstanceID) {
   VertexOutput out;
-  out.Point = mul(Data[instanceID].Proj * Data[instanceID].View * Data[instanceID].Model,
-                  float4(in.Point, 0.0f, 1.0f));
+  Buffer data = Data[instanceID];
+  out.Point = mul(mul(data.Proj, mul(data.View, data.Model)), float4(in.Point, 0.0f, 1.0f));
   out.TexCoord = in.TexCoord;
   out.ObjectId = instanceID;
   return out;

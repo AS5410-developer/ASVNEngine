@@ -18,9 +18,7 @@ class EShader : public IShader {
   }
   Shader* GetShader() { return ShaderInstance; }
 
-  virtual ~EShader() {
-    if (ShaderInstance) ShaderInstance->Release();
-  }
+  virtual ~EShader() = default;
 
  private:
   Shader* ShaderInstance;

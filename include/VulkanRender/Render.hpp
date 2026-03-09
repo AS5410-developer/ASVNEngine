@@ -44,22 +44,26 @@ class Render : public IRender {
   virtual void BindShader(IShader& shader) override;
 
   virtual void SetPostProcessingShader(IShader& shader) override {
-    PostProcessShader = &shader;
+    PostProcessShader = &reinterpret_cast<EShader&>(shader);
   }
 
   virtual ~Render() = default;
 
  private:
   static IEngine* EngineInstance;
-  IShader* PostProcessShader;
-  IShader* CurrentShader;
+  EShader* PostProcessShader = 0;
+  EShader* CurrentShader = 0;
   Device MainDevice;
   PhysicalDevice MainPhysicalDevice;
   Swapchain MainSwapchain;
   CommandBuffer MainCommandBuffer;
   VertexBuffer SpriteQuad;
+  glm::mat4 Proj;
+  glm::mat4 View;
   SSBO Buffer;
-  std::vector<ShaderData> ShaderParams;
+  ShaderData* ShaderParams;
+  unsigned int ShaderParamsCount = 0;
+  std::vector<unsigned int> FreeShaderParamsId;
 };
 }  // namespace AS::Engine
 

@@ -18,9 +18,15 @@ void SSBO::Create() {
                             .sharingMode = VK_SHARING_MODE_EXCLUSIVE};
   vkCreateBuffer(Dev.GetDevice(), &bcInfo, nullptr, &Buf);
   vkGetBufferMemoryRequirements(Dev.GetDevice(), Buf, &mr);
-  VideoMem = VideoMemory(Dev, mr.size, mr, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+  // FIX ME
+  // VideoMem = VideoMemory(Dev, mr.size, mr,
+  // VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT); VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+  // VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+  VideoMem = VideoMemory(Dev, mr.size, mr,
+                         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                             VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
   vkBindBufferMemory(Dev.GetDevice(), Buf, VideoMem.GetDeviceMemory(), 0);
-  Update();
+  // Update();
 }
 void SSBO::Update() {
   void* mem = VideoMem.Map();

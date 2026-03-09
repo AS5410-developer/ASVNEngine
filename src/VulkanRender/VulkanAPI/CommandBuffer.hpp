@@ -16,6 +16,8 @@ class CommandBuffer final {
 
   void WaitDeviceIdle();
 
+  void SetSwapchain(Swapchain& swapchain) { Swapch = swapchain; }
+
   void StartDraw();
   void SetCurrentShader(Shader& shader);
   template <typename T>
